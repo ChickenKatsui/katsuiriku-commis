@@ -31,6 +31,8 @@ Buka `assets/js/main.js`:
 
 Link/tombol langsung ada di `index.html`.
 
+Setelah mengubah `assets/css/style.css` atau `assets/js/main.js`, ganti angka `?v=20261021` di `index.html` (link CSS dan script JS) agar browser/CDN tidak memakai cache lama. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
+
 ## Edit slot commish (tanpa buka GitHub)
 1. Buka `https://chickenkatsui.github.io/katsuiriku-commis/#admin` atau klik **Admin slot** di footer.
 2. Isi **Total slot**, **Slot terisi**, dan catatan. Sisa slot dihitung otomatis.
