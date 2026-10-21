@@ -239,6 +239,16 @@ function setAdminStatus(message, type){
   el.className = "admin-status" + (type ? " " + type : "");
 }
 
+function updateAdminPreview(){
+  const totalInput = document.getElementById("admin-total");
+  const filledInput = document.getElementById("admin-filled");
+  const preview = document.getElementById("admin-available");
+  if(!totalInput || !filledInput || !preview) return;
+  const total = Math.max(0, Number.parseInt(totalInput.value, 10) || 0);
+  const filled = Math.max(0, Number.parseInt(filledInput.value, 10) || 0);
+  preview.textContent = Math.max(0, total - Math.min(filled, total));
+}
+
 function openSlotAdmin(){
   const modal = document.getElementById("slot-admin");
   if(!modal) return;
@@ -254,6 +264,7 @@ function openSlotAdmin(){
   try{ saved = localStorage.getItem("katsui_gh_token") || ""; }catch(e){}
   if(token) token.value = saved;
   if(remember) remember.checked = !!saved;
+  updateAdminPreview();
   setAdminStatus("", "");
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
@@ -381,6 +392,10 @@ function initSlotAdmin(){
   modal.querySelectorAll("[data-close]").forEach(el => el.addEventListener("click", closeSlotAdmin));
   const form = document.getElementById("slot-form");
   if(form) form.addEventListener("submit", saveSlots);
+  ["admin-total", "admin-filled"].forEach(id => {
+    const input = document.getElementById(id);
+    if(input) input.addEventListener("input", updateAdminPreview);
+  });
   document.addEventListener("keydown", (e) => {
     if(e.key === "Escape" && modal.classList.contains("open")) closeSlotAdmin();
   });

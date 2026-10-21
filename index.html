@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fredoka:wght@400;500;600;700&family=Manrope:wght@500;700;800&family=Ubuntu:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=20261021d" />
+<link rel="stylesheet" href="assets/css/style.css?v=20261021e" />
 </head>
 <body>
 
@@ -319,6 +319,7 @@
         <label>Total slot<input id="admin-total" type="number" min="0" max="999" step="1" required></label>
         <label>Slot terisi<input id="admin-filled" type="number" min="0" max="999" step="1" required></label>
       </div>
+      <p class="slot-form-preview">Sisa slot: <strong id="admin-available">5</strong></p>
       <label>Catatan<textarea id="admin-note" rows="3" maxlength="240"></textarea></label>
       <label>Token GitHub<input id="admin-token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_..."></label>
       <label class="slot-check"><input id="admin-remember" type="checkbox"> Ingat token di browser ini</label>
@@ -332,7 +333,7 @@
   </div>
 </div>
 
-<script src="assets/js/main.js?v=20261021d"></script>
+<script src="assets/js/main.js?v=20261021e"></script>
 <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>

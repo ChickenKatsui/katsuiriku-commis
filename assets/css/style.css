@@ -570,6 +570,11 @@ body.modal-open{overflow:hidden;}
 .slot-admin-close:hover{background:var(--ink);color:var(--surface);}
 .slot-form{display:flex;flex-direction:column;gap:.75rem;}
 .slot-form-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+.slot-form-preview{
+  margin-top:-.2rem;font-family:'Ubuntu',sans-serif;font-size:.76rem;
+  color:var(--muted);display:flex;align-items:baseline;gap:.35rem;
+}
+.slot-form-preview strong{font-family:'Fredoka',sans-serif;font-size:1.02rem;font-weight:600;color:var(--rose-deep);}
 .slot-form label{
   display:flex;flex-direction:column;gap:.32rem;
   font-family:'Ubuntu',sans-serif;font-size:.72rem;font-weight:700;
