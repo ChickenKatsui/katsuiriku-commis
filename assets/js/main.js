@@ -26,20 +26,28 @@ const CONTACT = {
 
 const PORTFOLIO_PLAYLIST = "https://youtube.com/playlist?list=PLNJ5KH9O1soM&si=lMcD65zGpCHeEC8i";
 
-/* Slot commish — data disimpan di data/slots.json (bisa diedit dari panel admin) */
-const SLOT_REPO = {
-  owner: "ChickenKatsui",
-  name: "katsuiriku-commis",
-  branch: "main",
-  path: "data/slots.json",
+/* ============================================================
+   Data live — Supabase (public read) + fallback JSON
+   Admin hanya bisa menulis lewat /admin/ dan RLS Supabase.
+   ============================================================ */
+const SITE_DATA_DEFAULT = {
+  slot_total: 5,
+  slot_filled: 0,
+  slot_note: "Slot commish dibuka. Chat untuk konfirmasi slot.",
+  leaderboard_title: "Top Commish",
+  leaderboard_period: "Bulan Ini",
+  leaderboard: [],
+  updated_at: null,
 };
-const SLOT_DEFAULT = {
-  total: 5,
-  filled: 0,
-  note: "Slot commish dibuka. Chat untuk konfirmasi slot.",
-  updatedAt: null,
+
+const FALLBACK_DATA = {
+  slots: "data/slots.json",
+  leaderboard: "data/top-commish.json",
 };
-let slotState = { ...SLOT_DEFAULT };
+
+let siteData = normalizeSiteData(SITE_DATA_DEFAULT);
+let supabaseClient = null;
+let siteChannel = null;
 
 /* ============================================================
    Icon set (inline SVG — more elegant than text symbols)
@@ -107,22 +115,59 @@ function fillContact(){
 }
 
 /* ============================================================
-   Slot commish — tampil dari data/slots.json, edit lewat panel admin
+   Slot + Top Commish data
    ============================================================ */
-function normalizeSlots(raw){
-  const total = Math.max(0, Math.min(999, Number.parseInt(raw && raw.total, 10) || 0));
-  const filledRaw = Number.parseInt(raw && raw.filled, 10) || 0;
+function clampInt(value, min, max, fallback = 0){
+  const parsed = Number.parseInt(value, 10);
+  if(!Number.isFinite(parsed)) return fallback;
+  return Math.max(min, Math.min(max, parsed));
+}
+
+function normalizeLeaderboard(raw){
+  let rows = raw;
+  if(typeof rows === "string"){
+    try{ rows = JSON.parse(rows); }catch(e){ rows = []; }
+  }
+  if(!Array.isArray(rows)) return [];
+
+  return rows
+    .map((row, index) => {
+      if(!row || typeof row !== "object") return null;
+      const name = String(row.name || "").trim().slice(0, 60);
+      if(!name) return null;
+      return {
+        position: clampInt(row.position, 1, 99, index + 1),
+        name,
+        commission_count: clampInt(row.commission_count ?? row.count, 0, 9999, 0),
+        handle: String(row.handle || "").trim().slice(0, 80),
+        avatar_url: String(row.avatar_url || row.avatar || "").trim().slice(0, 500)
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.position - b.position)
+    .slice(0, 5)
+    .map((row, index) => ({ ...row, position: index + 1 }));
+}
+
+function normalizeSiteData(raw){
+  const source = raw && typeof raw === "object" ? raw : {};
+  const total = clampInt(source.slot_total ?? source.total, 0, 999, 0);
+  const filled = clampInt(source.slot_filled ?? source.filled, 0, total, 0);
+
   return {
-    total,
-    filled: Math.max(0, Math.min(total, filledRaw)),
-    note: String((raw && raw.note) || "").slice(0, 240),
-    updatedAt: (raw && raw.updatedAt) || null
+    slot_total: total,
+    slot_filled: Math.min(total, filled),
+    slot_note: String(source.slot_note ?? source.note ?? "").slice(0, 240),
+    leaderboard_title: String(source.leaderboard_title || "Top Commish").slice(0, 80),
+    leaderboard_period: String(source.leaderboard_period || "Bulan Ini").slice(0, 60),
+    leaderboard: normalizeLeaderboard(source.leaderboard ?? source.entries),
+    updated_at: source.updated_at ?? source.updatedAt ?? null
   };
 }
 
-function getSlotStatus(state = slotState){
-  const available = Math.max(0, state.total - state.filled);
-  if(state.total <= 0) return { available, label: "Closed", full: true };
+function getSlotStatus(state = siteData){
+  const available = Math.max(0, state.slot_total - state.slot_filled);
+  if(state.slot_total <= 0) return { available, label: "Closed", full: true };
   if(available <= 0) return { available, label: "Full", full: true };
   return { available, label: "Open", full: false };
 }
@@ -136,34 +181,41 @@ function formatSlotDate(value){
   }).format(d);
 }
 
-function slotTimestamp(state){
-  const t = Date.parse(state && state.updatedAt ? state.updatedAt : "");
-  return Number.isFinite(t) ? t : 0;
+function escapeHtml(value){
+  return String(value == null ? "" : value).replace(/[&<>"']/g, ch => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[ch]);
 }
 
-function applySlotState(next){
-  // Jangan timpa data yang lebih baru (mis. baru disimpan dari panel admin)
-  // dengan file lokal yang masih versi lama.
-  if(slotTimestamp(next) < slotTimestamp(slotState)) return;
-  slotState = next;
-  renderSlots();
+function safeImageUrl(value){
+  if(!value) return "";
+  try{
+    const url = new URL(value, window.location.href);
+    return (url.protocol === "http:" || url.protocol === "https:") ? url.href : "";
+  }catch(e){
+    return "";
+  }
 }
 
-function renderSlots(state = slotState){
+function renderSlots(state = siteData){
   const status = getSlotStatus(state);
   const setText = (id, value) => { const el = document.getElementById(id); if(el) el.textContent = value; };
 
   setText("slot-available", status.available);
-  setText("slot-total", state.total);
-  setText("slot-total-2", state.total);
-  setText("slot-filled", state.filled);
-  setText("slot-note", state.note || "Slot diupdate berkala. Chat untuk konfirmasi.");
-  setText("slot-updated", formatSlotDate(state.updatedAt));
+  setText("slot-total", state.slot_total);
+  setText("slot-total-2", state.slot_total);
+  setText("slot-filled", state.slot_filled);
+  setText("slot-note", state.slot_note || "Slot diupdate berkala. Chat untuk konfirmasi.");
+  setText("slot-updated", formatSlotDate(state.updated_at));
   setText("slot-status", status.label);
   setText("hero-slot-text",
     status.available > 0
       ? `${status.available} slot tersedia`
-      : (state.total > 0 ? "Slot commish full" : "Slot commish ditutup")
+      : (state.slot_total > 0 ? "Slot commish full" : "Slot commish ditutup")
   );
 
   const statusEl = document.getElementById("slot-status");
@@ -176,7 +228,9 @@ function renderSlots(state = slotState){
 
   const bar = document.getElementById("slot-bar-fill");
   if(bar){
-    const pct = state.total > 0 ? Math.min(100, Math.round((state.filled / state.total) * 100)) : 0;
+    const pct = state.slot_total > 0
+      ? Math.min(100, Math.round((state.slot_filled / state.slot_total) * 100))
+      : 0;
     bar.style.width = pct + "%";
   }
 
@@ -184,6 +238,64 @@ function renderSlots(state = slotState){
     el.textContent = status.label;
     el.classList.toggle("badge-full", status.full);
   });
+}
+
+function renderLeaderboard(){
+  const kicker = document.getElementById("leaderboard-kicker");
+  const title = document.getElementById("leaderboard-title");
+  const updated = document.getElementById("leaderboard-updated");
+  const list = document.getElementById("leaderboard-list");
+  const empty = document.getElementById("leaderboard-empty");
+
+  if(kicker) kicker.textContent = "Leaderboard — " + (siteData.leaderboard_period || "Bulan Ini");
+  if(title) title.textContent = siteData.leaderboard_title || "Top Commish";
+  if(updated) updated.textContent = formatSlotDate(siteData.updated_at);
+  if(!list || !empty) return;
+
+  const entries = siteData.leaderboard || [];
+  if(!entries.length){
+    list.innerHTML = "";
+    list.hidden = true;
+    empty.hidden = false;
+    return;
+  }
+
+  list.hidden = false;
+  empty.hidden = true;
+  list.innerHTML = entries.map((entry, index) => {
+    const rank = String(index + 1).padStart(2, "0");
+    const topClass = index < 3 ? ` top-${index + 1}` : "";
+    const initial = (entry.name.trim().charAt(0) || "?").toUpperCase();
+    const avatarUrl = safeImageUrl(entry.avatar_url);
+    const avatar = avatarUrl
+      ? `<img class="leader-avatar" src="${escapeHtml(avatarUrl)}" alt="" loading="lazy" decoding="async" data-initial="${escapeHtml(initial)}">`
+      : `<span class="leader-avatar leader-initial" aria-hidden="true">${escapeHtml(initial)}</span>`;
+    const handle = entry.handle
+      ? `<small>${escapeHtml(entry.handle)}</small>`
+      : `<small>Client</small>`;
+
+    return `<li class="leader-row${topClass}">
+      <span class="leader-rank">${rank}</span>
+      ${avatar}
+      <span class="leader-info"><strong>${escapeHtml(entry.name)}</strong>${handle}</span>
+      <span class="leader-count"><strong>${entry.commission_count}</strong><small>commish</small></span>
+    </li>`;
+  }).join("");
+
+  list.querySelectorAll("img.leader-avatar").forEach(img => {
+    img.addEventListener("error", () => {
+      const fallback = document.createElement("span");
+      fallback.className = "leader-avatar leader-initial";
+      fallback.setAttribute("aria-hidden", "true");
+      fallback.textContent = img.dataset.initial || "?";
+      img.replaceWith(fallback);
+    }, { once: true });
+  });
+}
+
+function renderSite(){
+  renderSlots();
+  renderLeaderboard();
 }
 
 async function fetchJson(url, timeout = 4000){
@@ -200,209 +312,129 @@ async function fetchJson(url, timeout = 4000){
   }
 }
 
-async function loadSlots(){
-  const { owner, name, branch, path } = SLOT_REPO;
+async function loadFallback(){
   const bust = Date.now();
+  const [slots, board] = await Promise.all([
+    fetchJson(`${FALLBACK_DATA.slots}?t=${bust}`, 3000),
+    fetchJson(`${FALLBACK_DATA.leaderboard}?t=${bust}`, 3000)
+  ]);
 
-  // 1) File dari domain sendiri: cepat dan tetap jalan walau GitHub raw lambat.
-  const local = await fetchJson(`${path}?t=${bust}`, 3000);
-  if(local){
-    applySlotState(normalizeSlots(local));
+  const next = { ...siteData };
+  let touched = false;
+
+  if(slots){
+    next.slot_total = clampInt(slots.total, 0, 999, 0);
+    next.slot_filled = clampInt(slots.filled, 0, next.slot_total, 0);
+    next.slot_note = String(slots.note || "").slice(0, 240);
+    next.updated_at = slots.updatedAt || next.updated_at;
+    touched = true;
   }
 
-  // 2) GitHub raw: update paling baru setelah panel admin menyimpan.
-  const remote = await fetchJson(
-    `https://raw.githubusercontent.com/${owner}/${name}/${branch}/${path}?t=${bust}`,
-    4500
-  );
-  if(remote){
-    applySlotState(normalizeSlots(remote));
+  if(board){
+    next.leaderboard_title = String(board.title || next.leaderboard_title || "Top Commish").slice(0, 80);
+    next.leaderboard_period = String(board.period || next.leaderboard_period || "Bulan Ini").slice(0, 60);
+    next.leaderboard = normalizeLeaderboard(board.entries);
+    const boardTime = Date.parse(board.updatedAt || "") || 0;
+    const slotTime = Date.parse(slots && slots.updatedAt || next.updated_at || "") || 0;
+    if(boardTime > slotTime) next.updated_at = board.updatedAt;
+    touched = true;
+  }
+
+  if(!touched) return;
+
+  const incoming = Date.parse(next.updated_at || "") || 0;
+  const current = Date.parse(siteData.updated_at || "") || 0;
+  if(incoming < current) return;
+
+  siteData = normalizeSiteData(next);
+  renderSite();
+}
+
+function getSupabaseClient(){
+  const cfg = window.KATSUI_SUPABASE || {};
+  const url = String(cfg.url || "").trim();
+  const anonKey = String(cfg.anonKey || "").trim();
+
+  if(!url || !anonKey) return null;
+  if(/YOUR[-_]/i.test(url) || /YOUR[-_]/i.test(anonKey)) return null;
+  if(!window.supabase || typeof window.supabase.createClient !== "function") return null;
+
+  if(!supabaseClient){
+    supabaseClient = window.supabase.createClient(url, anonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
+  }
+  return supabaseClient;
+}
+
+function subscribeRealtime(client){
+  if(siteChannel) return;
+  try{
+    siteChannel = client
+      .channel("public-site-data")
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "site_data",
+        filter: "id=eq.1"
+      }, payload => {
+        if(payload && payload.new){
+          siteData = normalizeSiteData(payload.new);
+          renderSite();
+        }
+      })
+      .subscribe();
+  }catch(e){
+    siteChannel = null;
   }
 }
 
-function initSlotRefresh(){
-  renderSlots();
-  loadSlots();
-  document.addEventListener("visibilitychange", () => {
-    if(!document.hidden) loadSlots();
-  });
-  window.setInterval(() => {
-    if(!document.hidden) loadSlots();
-  }, 60000);
-}
-
-/* Panel admin slot — token hanya disimpan di browser, tidak di website */
-function setAdminStatus(message, type){
-  const el = document.getElementById("admin-status");
-  if(!el) return;
-  el.textContent = message;
-  el.className = "admin-status" + (type ? " " + type : "");
-}
-
-function updateAdminPreview(){
-  const totalInput = document.getElementById("admin-total");
-  const filledInput = document.getElementById("admin-filled");
-  const preview = document.getElementById("admin-available");
-  if(!totalInput || !filledInput || !preview) return;
-  const total = Math.max(0, Number.parseInt(totalInput.value, 10) || 0);
-  const filled = Math.max(0, Number.parseInt(filledInput.value, 10) || 0);
-  preview.textContent = Math.max(0, total - Math.min(filled, total));
-}
-
-function openSlotAdmin(){
-  const modal = document.getElementById("slot-admin");
-  if(!modal) return;
-  const total = document.getElementById("admin-total");
-  const filled = document.getElementById("admin-filled");
-  const note = document.getElementById("admin-note");
-  const token = document.getElementById("admin-token");
-  const remember = document.getElementById("admin-remember");
-  if(total) total.value = slotState.total;
-  if(filled) filled.value = slotState.filled;
-  if(note) note.value = slotState.note || "";
-  let saved = "";
-  try{ saved = localStorage.getItem("katsui_gh_token") || ""; }catch(e){}
-  if(token) token.value = saved;
-  if(remember) remember.checked = !!saved;
-  updateAdminPreview();
-  setAdminStatus("", "");
-  modal.classList.add("open");
-  modal.setAttribute("aria-hidden", "false");
-  document.body.classList.add("modal-open");
-  window.setTimeout(() => { if(total) total.focus(); }, 60);
-}
-
-function closeSlotAdmin(){
-  const modal = document.getElementById("slot-admin");
-  if(!modal) return;
-  modal.classList.remove("open");
-  modal.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("modal-open");
-}
-
-function base64EncodeUnicode(str){
-  const bytes = new TextEncoder().encode(str);
-  let binary = "";
-  bytes.forEach(b => { binary += String.fromCharCode(b); });
-  return btoa(binary);
-}
-
-async function saveSlots(event){
-  event.preventDefault();
-  const totalInput = document.getElementById("admin-total");
-  const filledInput = document.getElementById("admin-filled");
-  const noteInput = document.getElementById("admin-note");
-  const tokenInput = document.getElementById("admin-token");
-  const rememberInput = document.getElementById("admin-remember");
-  const saveBtn = document.getElementById("admin-save");
-  if(!totalInput || !filledInput || !tokenInput || !saveBtn) return;
-
-  const rawTotal = Number.parseInt(totalInput.value, 10);
-  const rawFilled = Number.parseInt(filledInput.value, 10);
-  const note = (noteInput ? noteInput.value : "").trim().slice(0, 240);
-  const token = tokenInput.value.trim();
-
-  if(!Number.isFinite(rawTotal) || rawTotal < 0 || !Number.isFinite(rawFilled) || rawFilled < 0){
-    setAdminStatus("Isi total dan slot terisi dengan angka 0 atau lebih.", "err");
-    return;
-  }
-  const total = Math.min(999, rawTotal);
-  const filled = Math.min(999, rawFilled);
-  if(filled > total){
-    setAdminStatus("Slot terisi tidak boleh lebih besar dari total slot.", "err");
-    return;
-  }
-  if(!token){
-    setAdminStatus("Masukkan token GitHub dulu.", "err");
-    tokenInput.focus();
-    return;
-  }
-
-  saveBtn.disabled = true;
-  saveBtn.textContent = "Menyimpan...";
-  setAdminStatus("Menyimpan ke GitHub...", "");
-
-  const { owner, name, branch, path } = SLOT_REPO;
-  const api = `https://api.github.com/repos/${owner}/${name}/contents/${path}`;
-  const headers = {
-    "Authorization": `Bearer ${token}`,
-    "Accept": "application/vnd.github+json",
-    "X-GitHub-Api-Version": "2022-11-28"
-  };
+async function loadFromSupabase(){
+  const client = getSupabaseClient();
+  if(!client) return false;
 
   try{
-    let sha = "";
-    const getRes = await fetch(`${api}?ref=${encodeURIComponent(branch)}`, { headers, cache: "no-store" });
-    if(getRes.ok){
-      const info = await getRes.json();
-      sha = info.sha || "";
-    }else if(getRes.status !== 404){
-      const err = await getRes.json().catch(() => ({}));
-      throw new Error(err.message || `Gagal membaca data slot (${getRes.status}).`);
-    }
+    const { data, error } = await client
+      .from("site_data")
+      .select("*")
+      .eq("id", 1)
+      .maybeSingle();
 
-    const data = {
-      total,
-      filled,
-      note: note || "Slot diupdate berkala. Chat untuk konfirmasi slot.",
-      updatedAt: new Date().toISOString()
-    };
-    const payload = {
-      message: `Update slot commish: ${Math.max(0, total - filled)} tersedia`,
-      content: base64EncodeUnicode(JSON.stringify(data, null, 2) + "\n"),
-      branch
-    };
-    if(sha) payload.sha = sha;
+    if(error || !data) return false;
 
-    const putRes = await fetch(api, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify(payload)
-    });
-    if(!putRes.ok){
-      const err = await putRes.json().catch(() => ({}));
-      throw new Error(err.message || `Gagal menyimpan slot (${putRes.status}).`);
-    }
-
-    slotState = normalizeSlots(data);
-    renderSlots();
-    try{
-      if(rememberInput && rememberInput.checked) localStorage.setItem("katsui_gh_token", token);
-      else localStorage.removeItem("katsui_gh_token");
-    }catch(e){}
-    setAdminStatus("Tersimpan! Web live biasanya update dalam ±1 menit.", "ok");
-    saveBtn.textContent = "Tersimpan";
-    window.setTimeout(() => {
-      saveBtn.disabled = false;
-      saveBtn.textContent = "Simpan slot";
-    }, 1600);
-    window.setTimeout(loadSlots, 4000);
-  }catch(err){
-    setAdminStatus(err.message || "Gagal menyimpan slot.", "err");
-    saveBtn.disabled = false;
-    saveBtn.textContent = "Simpan slot";
+    siteData = normalizeSiteData(data);
+    renderSite();
+    subscribeRealtime(client);
+    return true;
+  }catch(e){
+    return false;
   }
 }
 
-function initSlotAdmin(){
-  const modal = document.getElementById("slot-admin");
-  if(!modal) return;
-  const openBtn = document.getElementById("open-slot-admin");
-  if(openBtn) openBtn.addEventListener("click", openSlotAdmin);
-  modal.querySelectorAll("[data-close]").forEach(el => el.addEventListener("click", closeSlotAdmin));
-  const form = document.getElementById("slot-form");
-  if(form) form.addEventListener("submit", saveSlots);
-  ["admin-total", "admin-filled"].forEach(id => {
-    const input = document.getElementById(id);
-    if(input) input.addEventListener("input", updateAdminPreview);
+async function refreshSiteData(){
+  if(document.hidden) return;
+  const ok = await loadFromSupabase();
+  if(!ok) await loadFallback();
+}
+
+function initSiteData(){
+  renderSite();
+
+  loadFromSupabase().then(ok => {
+    if(!ok) loadFallback();
   });
-  document.addEventListener("keydown", (e) => {
-    if(e.key === "Escape" && modal.classList.contains("open")) closeSlotAdmin();
+
+  document.addEventListener("visibilitychange", () => {
+    if(!document.hidden) refreshSiteData();
   });
-  if(location.hash === "#admin" || location.hash === "#slot-admin") openSlotAdmin();
-  window.addEventListener("hashchange", () => {
-    if(location.hash === "#admin" || location.hash === "#slot-admin") openSlotAdmin();
-  });
+
+  window.setInterval(() => {
+    if(!document.hidden) refreshSiteData();
+  }, 60000);
 }
 
 /* ============================================================
@@ -472,7 +504,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initNav();
   initActiveLinks();
   initReveal();
-  initSlotRefresh();
-  initSlotAdmin();
-  document.getElementById("year").textContent = new Date().getFullYear();
+  initSiteData();
+  const year = document.getElementById("year");
+  if(year) year.textContent = new Date().getFullYear();
 });

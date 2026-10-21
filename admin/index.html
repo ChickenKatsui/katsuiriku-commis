@@ -1,0 +1,154 @@
+<!DOCTYPE HTML>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Admin — KatsuiRiku Ch</title>
+<meta name="robots" content="noindex,nofollow" />
+<meta name="theme-color" content="#EAD9D2" />
+<link rel="icon" href="../assets/img/logo-character.png" type="image/png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fredoka:wght@400;500;600;700&family=Manrope:wght@500;700;800&family=Ubuntu:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261022a" />
+<link rel="stylesheet" href="admin.css?v=20261022a" />
+</head>
+<body class="admin-body">
+
+<div class="bg-orb orb-1" aria-hidden="true"></div>
+<div class="bg-orb orb-3" aria-hidden="true"></div>
+
+<main class="admin-shell">
+  <header class="admin-topbar">
+    <a class="admin-brand" href="../" aria-label="KatsuiRiku Ch">
+      <span class="logo"><img src="../assets/img/logo-character.png" alt="" /></span>
+      <span class="admin-brand-text">
+        <strong>KatsuiRiku Ch</strong>
+        <small>Admin Panel</small>
+      </span>
+    </a>
+    <div class="admin-actions">
+      <span class="admin-user" id="admin-email"></span>
+      <a class="btn btn-ghost admin-view-site" href="../" target="_blank" rel="noopener">Lihat website</a>
+      <button class="btn btn-secondary" id="logout-btn" type="button" hidden>Keluar</button>
+    </div>
+  </header>
+
+  <!-- SETUP -->
+  <section class="admin-card admin-login" id="setup-screen" hidden>
+    <span class="section-kicker">Setup</span>
+    <h1>Supabase belum dikonfigurasi</h1>
+    <p class="admin-hint">Panel admin dan data live memakai Supabase. Situs publik tetap jalan dengan data cadangan selama setup belum selesai.</p>
+    <ol class="admin-steps">
+      <li>Buat project gratis di <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">Supabase</a>.</li>
+      <li>Jalankan SQL setup dari panduan di repo (tabel, RLS, realtime).</li>
+      <li>Buat user admin di <strong>Authentication → Users</strong>, lalu masukkan UUID-nya ke tabel <code>admin_users</code>.</li>
+      <li>Salin <strong>Project URL</strong> dan <strong>anon public key</strong> ke <code>assets/js/supabase-config.js</code>.</li>
+      <li>Refresh halaman ini, lalu login.</li>
+    </ol>
+    <div class="admin-form-actions">
+      <a class="btn btn-primary" href="https://github.com/ChickenKatsui/katsuiriku-commis/blob/main/SUPABASE_SETUP.md" target="_blank" rel="noopener">Buka panduan setup</a>
+    </div>
+    <p class="admin-status" id="setup-status" role="status"></p>
+    <p class="admin-hint admin-hint-sm">Jangan pernah memakai <strong>service_role key</strong> di browser.</p>
+  </section>
+
+  <!-- LOGIN -->
+  <section class="admin-card admin-login" id="login-screen" hidden>
+    <span class="section-kicker">Admin</span>
+    <h1>Masuk ke panel</h1>
+    <p class="admin-hint">Gunakan akun admin yang sudah didaftarkan di Supabase Authentication.</p>
+    <form id="login-form" class="admin-form">
+      <label class="admin-field">Email
+        <input id="login-email" type="email" autocomplete="username" required />
+      </label>
+      <label class="admin-field">Password
+        <input id="login-password" type="password" autocomplete="current-password" required />
+      </label>
+      <div class="admin-form-actions">
+        <button class="btn btn-primary" type="submit" id="login-btn">Masuk</button>
+      </div>
+      <p class="admin-status" id="login-status" role="status"></p>
+    </form>
+    <p class="admin-hint admin-hint-sm">Tidak ada halaman daftar publik. Akun admin dibuat dari Supabase Dashboard.</p>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="dashboard-screen" hidden>
+    <div class="admin-dashboard-head">
+      <div>
+        <span class="section-kicker">Dashboard</span>
+        <h1>Admin Panel</h1>
+      </div>
+      <span class="admin-badge">Supabase live</span>
+    </div>
+
+    <div class="admin-tabs" role="tablist" aria-label="Menu admin">
+      <button class="admin-tab active" type="button" data-tab="slots" role="tab" aria-selected="true">Slot Commish</button>
+      <button class="admin-tab" type="button" data-tab="leaderboard" role="tab" aria-selected="false">Top Commish</button>
+    </div>
+
+    <!-- SLOT -->
+    <section class="admin-card admin-panel" id="tab-slots" role="tabpanel">
+      <div class="admin-section-head">
+        <div>
+          <span class="section-kicker">Info slot</span>
+          <h2>Slot Commish</h2>
+        </div>
+        <span class="admin-live">Realtime</span>
+      </div>
+      <form id="slot-form" class="admin-form">
+        <div class="admin-grid-2">
+          <label class="admin-field">Total slot
+            <input id="slot-total" type="number" min="0" max="999" step="1" required />
+          </label>
+          <label class="admin-field">Slot terisi
+            <input id="slot-filled" type="number" min="0" max="999" step="1" required />
+          </label>
+        </div>
+        <p class="admin-preview">Sisa slot: <strong id="slot-remaining">5</strong></p>
+        <label class="admin-field">Catatan
+          <textarea id="slot-note" rows="3" maxlength="240" placeholder="Slot commish dibuka. Chat untuk konfirmasi slot."></textarea>
+        </label>
+        <p class="admin-hint">Perubahan langsung tampil di website lewat Supabase Realtime.</p>
+        <div class="admin-form-actions">
+          <button class="btn btn-primary" type="submit" id="slot-save">Simpan slot</button>
+        </div>
+        <p class="admin-status" id="slot-status" role="status"></p>
+      </form>
+    </section>
+
+    <!-- TOP COMMISH -->
+    <section class="admin-card admin-panel" id="tab-leaderboard" role="tabpanel" hidden>
+      <div class="admin-section-head">
+        <div>
+          <span class="section-kicker">Leaderboard manual</span>
+          <h2>Top Commish</h2>
+        </div>
+        <span class="admin-live">Maks. 5</span>
+      </div>
+      <form id="leaderboard-form" class="admin-form">
+        <div class="admin-grid-2">
+          <label class="admin-field">Judul leaderboard
+            <input id="leaderboard-title" type="text" maxlength="80" placeholder="Top Commish" />
+          </label>
+          <label class="admin-field">Periode
+            <input id="leaderboard-period" type="text" maxlength="60" placeholder="Oktober 2026" />
+          </label>
+        </div>
+        <p class="admin-hint">Isi maksimal 5 client. Baris yang namanya kosong tidak disimpan. Urutan baris = urutan rank.</p>
+        <div class="admin-leaderboard-rows" id="leaderboard-rows"></div>
+        <div class="admin-form-actions">
+          <button class="btn btn-primary" type="submit" id="leaderboard-save">Simpan leaderboard</button>
+        </div>
+        <p class="admin-status" id="leaderboard-status" role="status"></p>
+      </form>
+    </section>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" defer></script>
+<script src="../assets/js/supabase-config.js?v=20261022a" defer></script>
+<script src="admin.js?v=20261022a" defer></script>
+</body>
+</html>

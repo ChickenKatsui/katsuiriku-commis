@@ -1,29 +1,39 @@
-# KatsuiRiku Ch — Commission (Static Site)
+# KatsuiRiku Ch — Commission (Static Site + Supabase)
 
-Website commission statis (HTML/CSS/JS) dengan nuansa blush rose, cream, cocoa, sage, dan moon gold. Responsive + mobile dock.
+Website commission statis (HTML/CSS/JS) dengan nuansa blush rose, cream, cocoa, sage, dan moon gold. Responsive + mobile dock. Data slot dan leaderboard **Top Commish** memakai Supabase supaya bisa diedit dari admin panel terpisah dan update realtime.
 
 ## Struktur
+
 - `index.html` — halaman utama
 - `assets/css/style.css` — styling & responsive
-- `assets/js/main.js` — data & interaksi (EDIT DI SINI)
-- `data/slots.json` — jumlah slot commish (dibaca website, diedit lewat panel admin)
+- `assets/js/main.js` — data brand/sosmed + pembacaan data live (EDIT DI SINI)
+- `assets/js/supabase-config.js` — URL + anon key Supabase (isi setelah setup)
+- `admin/` — panel admin terpisah (`index.html`, `admin.css`, `admin.js`)
+- `data/slots.json` — fallback slot kalau Supabase belum aktif
+- `data/top-commish.json` — fallback leaderboard kosong
+- `SUPABASE_SETUP.md` — panduan SQL, Auth, RLS, realtime
 - `assets/img/logo-character.png` — logo headcrop karakter (header, favicon)
 - `assets/img/character.png` — ilustrasi karakter full body (hero)
 - `assets/img/logo.svg` — logo paw cadangan (tidak dipakai)
+- `robots.txt` — mencegah `/admin/` diindeks mesin pencari
 
 ## Konten saat ini
+
 - Katsui Clip: **Rp60.000 / menit** — kartu gradient royal gold
 - VOD Clip Lite: **Rp60.000 / menit** — kartu soft rose, format **16:9**
 - Shorts: Rp50.000 / Rp100.000 / Rp150.000
 - Info slot commish: angka slot tampil di hero, section khusus, dan badge kartu
+- Top Commish: leaderboard manual **top 5 client** berdasarkan jumlah commission per bulan
 - Portfolio Shorts: playlist `https://youtube.com/playlist?list=PLNJ5KH9O1soM&si=lMcD65zGpCHeEC8i`
 - Portfolio VOD & Kategori Shorts: dihapus
 - Stats subscriber/views/video: diganti highlight layanan (Rapi & Clean, 2x Revisi, Asset & BGM)
 - Footer: © KatsuiRiku Ch (tanpa credit Carrd)
 - Logo header & favicon memakai `assets/img/logo-character.png`; avatar/ilustrasi hero memakai `assets/img/character.png`
 
-## Cara edit
+## Cara edit konten
+
 Buka `assets/js/main.js`:
+
 - `BRAND` → nama, tagline, logo
 - `SOCIALS` → link sosmed + ikon SVG
 - `CONTACT` → link Twitter/X, Instagram, Discord, Facebook
@@ -31,43 +41,81 @@ Buka `assets/js/main.js`:
 
 Link/tombol langsung ada di `index.html`.
 
-Setelah mengubah `assets/css/style.css` atau `assets/js/main.js`, ganti angka `?v=...` di `index.html` (link CSS dan script JS) agar browser/CDN tidak memakai cache lama. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
+Setelah mengubah `assets/css/style.css`, `assets/js/main.js`, `admin/admin.css`, atau `admin/admin.js`, ganti angka `?v=...` di `index.html` dan `admin/index.html` agar browser/CDN tidak memakai cache lama. Versi saat ini: **20261022a**. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
 
-## Edit slot commish (tanpa buka GitHub)
-1. Buka `https://chickenkatsui.github.io/katsuiriku-commis/#admin` atau klik **Admin slot** di footer.
-2. Isi **Total slot**, **Slot terisi**, dan catatan. Sisa slot dihitung otomatis.
-3. Tempel **GitHub token** (fine-grained PAT) dengan akses **Contents: Read and write** khusus repo ini.
-4. Klik **Simpan slot**. Data ditulis ke `data/slots.json`; website live biasanya update dalam ±1 menit.
+## Admin panel & data live
 
-Catatan:
-- Token hanya disimpan di browser kamu (localStorage) kalau opsi **Ingat token** dicentang. Token tidak pernah dimasukkan ke website/repo.
-- Jangan centang **Ingat token** di perangkat bersama. Untuk menghapus token, buka panel admin lalu uncheck dan simpan, atau hapus lewat DevTools.
-- Karena ini situs statis, panel admin butuh token GitHub untuk menulis data. Tanpa token, panel hanya bisa dibuka, tidak bisa menyimpan.
-- Panel ini bukan backend realtime: admin melihat perubahan langsung, sedangkan pengunjung lain melihatnya setelah refresh/poll (biasanya ±1 menit). Kalau butuh sinkron instan tanpa GitHub, perlu upgrade ke backend seperti Supabase/Firebase.
-- Angka default saat ini: total **5**, terisi **0**. Ubah lewat panel admin sesuai slot asli.
+Panel admin ada di halaman terpisah, bukan modal publik:
+
+`https://chickenkatsui.github.io/katsuiriku-commis/admin/`
+
+Halaman ini tidak dilink dari website publik dan memakai `noindex` + `robots.txt`. Pengunjung biasa yang membuka URL tersebut hanya melihat halaman login.
+
+### Setup Supabase (sekali)
+
+Ikuti langkah lengkap di **`SUPABASE_SETUP.md`**. Ringkasnya:
+
+1. Buat project Supabase.
+2. Jalankan SQL setup (tabel `site_data`, `admin_users`, RLS, realtime).
+3. Buat user admin di **Authentication → Users** (auto-confirm), lalu masukkan UUID-nya ke `admin_users`.
+4. Salin **Project URL** + **anon public key** ke `assets/js/supabase-config.js`.
+5. Buka `/admin/`, login.
+
+**Jangan pernah** memakai `service_role` key di website. Anon key aman karena RLS membatasi tulis.
+
+### Edit slot
+
+Tab **Slot Commish** → isi total, terisi, catatan → simpan. Website update realtime (fallback polling ±60 detik kalau realtime mati).
+
+### Edit Top Commish
+
+Tab **Top Commish** → isi judul + periode → isi maksimal 5 baris (nama, jumlah commish, handle opsional, avatar URL opsional) → simpan. Urutan baris = rank. Ganti periode dan isi ulang setiap bulan.
+
+### Keamanan
+
+- Public hanya bisa `SELECT` data.
+- Hanya user di `admin_users` yang bisa menulis (RLS `is_admin()`).
+- `admin_users` tidak bisa dibaca/ditulis dari browser.
+- Sesi login admin disimpan di `sessionStorage` tab (tutup tab = logout).
+- Pendaftaran publik di Supabase sebaiknya dimatikan.
+- Admin page bukan URL rahasia sebagai pengaman utama; pengamannya adalah Supabase Auth + RLS.
+
+## Fallback sebelum Supabase aktif
+
+Selama `supabase-config.js` kosong, website publik memakai:
+
+- `data/slots.json` untuk slot
+- `data/top-commish.json` untuk leaderboard (default kosong)
+
+Jadi situs tetap jalan tanpa Supabase. Setelah config diisi, Supabase menjadi sumber utama.
 
 ## Deploy ke GitHub Pages
-1. Buat repo baru (mis. `katsuiriku-commis`).
-2. Upload semua file.
-3. Settings → Pages → Source: branch `main`, root.
-4. Akses `https://username.github.io/katsuiriku-commis/`.
+
+1. Repo: `ChickenKatsui/katsuiriku-commis`.
+2. Settings → Pages → Source: branch `main`, root.
+3. Akses `https://chickenkatsui.github.io/katsuiriku-commis/`.
+4. Admin: `https://chickenkatsui.github.io/katsuiriku-commis/admin/`.
+
+Tidak perlu build tool. `.nojekyll` sudah disertakan.
 
 ## Responsive
+
 - Sudah dicek dari **240px sampai 2560px** tanpa horizontal scroll.
 - Breakpoint utama:
   - `≤ 980px` — hero jadi satu kolom
-  - `≤ 900px` — navigasi berubah jadi hamburger (tablet)
+  - `≤ 900px` — navigasi berubah jadi hamburger
   - `≤ 820px` — slot board jadi satu kolom
   - `≤ 720px` — highlight & playlist menyesuaikan
-  - `≤ 560px` — kartu satu kolom + mobile dock + modal admin satu kolom
+  - `≤ 560px` — kartu satu kolom + mobile dock + header logo saja
   - `≤ 380px` — penyesuaian layar sangat kecil
-  - `≤ 560px` / HP landscape (`≤ 950px` & tinggi `≤ 500px`) — header logo saja
-- Mobile dock & footer sudah memakai safe-area inset (iPhone notch/home indicator).
-- Header HP/iPhone memakai **logo saja** (teks brand disembunyikan); tablet & laptop tetap logo + teks.
-- Logo HP diperbesar (56px) dan memakai frame blush + gold; di tablet/laptop tetap 42px agar layout tidak berubah.
+  - HP landscape (`≤ 950px` & tinggi `≤ 500px`) — header logo saja
+- Mobile dock & footer memakai safe-area inset (iPhone notch/home indicator).
+- Logo HP diperbesar (56px); tablet/laptop tetap 42px.
 
 ## Catatan
+
 - Tidak perlu build tool.
 - `.nojekyll` sudah disertakan.
 - Untuk mengganti logo header/favicon, timpa `assets/img/logo-character.png` dengan gambar persegi (disarankan 256×256 atau lebih, background transparan).
 - Untuk mengganti ilustrasi hero, timpa `assets/img/character.png`.
+- Palet: bg `#F3E7E0` → `#E4C6C0` → `#D9A6A6`; surface `#FBF4EC` / `#F4E7DA`; ink `#3A2620`; rose `#B86B6B` / `#8E4F4F`; sage `#6F8B7E`; gold `#C9A227`; gold-light `#F5D98B`.
