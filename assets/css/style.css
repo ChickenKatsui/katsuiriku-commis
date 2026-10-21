@@ -597,6 +597,7 @@ body.modal-open{overflow:hidden;}
 .slot-check input{width:16px;height:16px;accent-color:var(--rose-deep);}
 .slot-admin-hint{font-size:.7rem;line-height:1.5;color:var(--muted);margin-top:-.1rem;}
 .slot-admin-hint strong{color:var(--rose-deep);}
+.slot-admin-hint a{color:var(--rose-deep);text-decoration:underline;text-underline-offset:2px;}
 .slot-form-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.2rem;}
 .slot-form-actions .btn{margin-top:0;flex:1;min-width:130px;}
 .admin-status{min-height:1.1rem;font-size:.78rem;line-height:1.45;color:var(--muted);}

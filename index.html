@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fredoka:wght@400;500;600;700&family=Manrope:wght@500;700;800&family=Ubuntu:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=20261021b" />
+<link rel="stylesheet" href="assets/css/style.css?v=20261021c" />
 </head>
 <body>
 
@@ -313,7 +313,7 @@
     <button class="slot-admin-close" type="button" aria-label="Tutup" data-close>×</button>
     <span class="section-kicker">Admin</span>
     <h2 id="slot-admin-title">Edit Slot Commish</h2>
-    <p class="slot-admin-sub">Ubah jumlah slot tanpa membuka GitHub. Data disimpan ke repo dan tampil di web setelah build Pages.</p>
+    <p class="slot-admin-sub">Ubah jumlah slot tanpa membuka GitHub. Sekali saja perlu token GitHub; setelah itu edit langsung dari sini.</p>
     <form id="slot-form" class="slot-form">
       <div class="slot-form-row">
         <label>Total slot<input id="admin-total" type="number" min="0" max="999" step="1" required></label>
@@ -322,7 +322,7 @@
       <label>Catatan<textarea id="admin-note" rows="3" maxlength="240"></textarea></label>
       <label>Token GitHub<input id="admin-token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_..."></label>
       <label class="slot-check"><input id="admin-remember" type="checkbox"> Ingat token di browser ini</label>
-      <p class="slot-admin-hint">Token hanya disimpan di browser ini, tidak di website. Butuh akses <strong>Contents: Read and write</strong> ke repo ini.</p>
+      <p class="slot-admin-hint">Token hanya disimpan di browser ini, tidak di website. Butuh akses <strong>Contents: Read and write</strong> ke repo ini. <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Buat token baru</a>.</p>
       <div class="slot-form-actions">
         <button class="btn btn-primary" id="admin-save" type="submit">Simpan slot</button>
         <button class="btn btn-ghost" type="button" data-close>Batal</button>
@@ -332,7 +332,7 @@
   </div>
 </div>
 
-<script src="assets/js/main.js?v=20261021b"></script>
+<script src="assets/js/main.js?v=20261021c"></script>
 <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
