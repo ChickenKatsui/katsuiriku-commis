@@ -43,6 +43,7 @@ Catatan:
 - Token hanya disimpan di browser kamu (localStorage) kalau opsi **Ingat token** dicentang. Token tidak pernah dimasukkan ke website/repo.
 - Jangan centang **Ingat token** di perangkat bersama. Untuk menghapus token, buka panel admin lalu uncheck dan simpan, atau hapus lewat DevTools.
 - Karena ini situs statis, panel admin butuh token GitHub untuk menulis data. Tanpa token, panel hanya bisa dibuka, tidak bisa menyimpan.
+- Panel ini bukan backend realtime: admin melihat perubahan langsung, sedangkan pengunjung lain melihatnya setelah refresh/poll (biasanya ±1 menit). Kalau butuh sinkron instan tanpa GitHub, perlu upgrade ke backend seperti Supabase/Firebase.
 - Angka default saat ini: total **5**, terisi **0**. Ubah lewat panel admin sesuai slot asli.
 
 ## Deploy ke GitHub Pages
