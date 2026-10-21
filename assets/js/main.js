@@ -136,6 +136,19 @@ function formatSlotDate(value){
   }).format(d);
 }
 
+function slotTimestamp(state){
+  const t = Date.parse(state && state.updatedAt ? state.updatedAt : "");
+  return Number.isFinite(t) ? t : 0;
+}
+
+function applySlotState(next){
+  // Jangan timpa data yang lebih baru (mis. baru disimpan dari panel admin)
+  // dengan file lokal yang masih versi lama.
+  if(slotTimestamp(next) < slotTimestamp(slotState)) return;
+  slotState = next;
+  renderSlots();
+}
+
 function renderSlots(state = slotState){
   const status = getSlotStatus(state);
   const setText = (id, value) => { const el = document.getElementById(id); if(el) el.textContent = value; };
@@ -194,8 +207,7 @@ async function loadSlots(){
   // 1) File dari domain sendiri: cepat dan tetap jalan walau GitHub raw lambat.
   const local = await fetchJson(`${path}?t=${bust}`, 3000);
   if(local){
-    slotState = normalizeSlots(local);
-    renderSlots();
+    applySlotState(normalizeSlots(local));
   }
 
   // 2) GitHub raw: update paling baru setelah panel admin menyimpan.
@@ -204,11 +216,7 @@ async function loadSlots(){
     4500
   );
   if(remote){
-    const normalized = normalizeSlots(remote);
-    if(JSON.stringify(normalized) !== JSON.stringify(slotState)){
-      slotState = normalized;
-      renderSlots();
-    }
+    applySlotState(normalizeSlots(remote));
   }
 }
 
