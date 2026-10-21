@@ -150,7 +150,7 @@ function renderSlots(state = slotState){
   setText("hero-slot-text",
     status.available > 0
       ? `${status.available} slot tersedia`
-      : (state.total > 0 ? "Slot commish full" : "Cek info slot commish")
+      : (state.total > 0 ? "Slot commish full" : "Slot commish ditutup")
   );
 
   const statusEl = document.getElementById("slot-status");
