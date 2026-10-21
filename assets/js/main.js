@@ -360,13 +360,17 @@ function getSupabaseClient(){
   if(!window.supabase || typeof window.supabase.createClient !== "function") return null;
 
   if(!supabaseClient){
-    supabaseClient = window.supabase.createClient(url, anonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false
-      }
-    });
+    try{
+      supabaseClient = window.supabase.createClient(url, anonKey, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        }
+      });
+    }catch(e){
+      return null;
+    }
   }
   return supabaseClient;
 }

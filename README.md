@@ -41,7 +41,7 @@ Buka `assets/js/main.js`:
 
 Link/tombol langsung ada di `index.html`.
 
-Setelah mengubah `assets/css/style.css`, `assets/js/main.js`, `admin/admin.css`, atau `admin/admin.js`, ganti angka `?v=...` di `index.html` dan `admin/index.html` agar browser/CDN tidak memakai cache lama. Versi saat ini: **20261022a**. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
+Setelah mengubah `assets/css/style.css`, `assets/js/main.js`, `admin/admin.css`, atau `admin/admin.js`, ganti angka `?v=...` di `index.html` dan `admin/index.html` agar browser/CDN tidak memakai cache lama. Versi saat ini: **20261022b**. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
 
 ## Admin panel & data live
 

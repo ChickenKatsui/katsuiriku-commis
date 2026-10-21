@@ -418,18 +418,24 @@
       return;
     }
 
-    client = window.supabase.createClient(
-      String(cfg.url).trim(),
-      String(cfg.anonKey).trim(),
-      {
-        auth: {
-          persistSession: true,
-          storage: window.sessionStorage,
-          autoRefreshToken: true,
-          detectSessionInUrl: false
+    try{
+      client = window.supabase.createClient(
+        String(cfg.url).trim(),
+        String(cfg.anonKey).trim(),
+        {
+          auth: {
+            persistSession: true,
+            storage: window.sessionStorage,
+            autoRefreshToken: true,
+            detectSessionInUrl: false
+          }
         }
-      }
-    );
+      );
+    }catch(err){
+      show("setup-screen");
+      setStatus("setup-status", "Config Supabase tidak valid: " + (err.message || "cek URL/anon key."), "err");
+      return;
+    }
 
     bindUI();
     show("login-screen");
@@ -442,6 +448,9 @@
       }
       if(data && data.session) handleSession(data.session);
       else show("login-screen");
+    }).catch(err => {
+      setStatus("login-status", "Gagal membaca sesi: " + (err.message || "coba refresh."), "err");
+      show("login-screen");
     });
 
     client.auth.onAuthStateChange((event, session) => {
