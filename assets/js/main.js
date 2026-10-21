@@ -9,22 +9,37 @@ const BRAND = {
 };
 
 const SOCIALS = [
-  { label: "YouTube",   url: "https://www.youtube.com/channel/UCe2LsxoXTqj-yH8ePaHjYEA", icon: "youtube" },
-  { label: "Twitter",   url: "https://twitter.com/KatsuiRikuCh", icon: "x" },
-  { label: "Instagram", url: "https://instagram.com/KatsuiRikuCh", icon: "instagram" },
-  { label: "Facebook",  url: "https://facebook.com/KatsuiRikuCh", icon: "facebook" },
-  { label: "TikTok",    url: "https://www.tiktok.com/@KatsuiRikuCh", icon: "tiktok" },
-  { label: "Trakteer",  url: "https://trakteer.id/KatsuiRiku", icon: "heart" },
+  { label: "YouTube",     url: "https://www.youtube.com/channel/UCe2LsxoXTqj-yH8ePaHjYEA", icon: "youtube" },
+  { label: "Twitter / X", url: "https://x.com/KRikuyt", icon: "x" },
+  { label: "Instagram",   url: "https://www.instagram.com/katsuiriku_ch?obrf=MTJuZmxtMHVuYWN0dg==", icon: "instagram" },
+  { label: "Facebook",    url: "https://www.facebook.com/share/1ctEANbwXR/", icon: "facebook" },
+  { label: "TikTok",      url: "https://www.tiktok.com/@KatsuiRikuCh", icon: "tiktok" },
+  { label: "Sociabuzz",   url: "https://sociabuzz.com/ikatsu/tribe", icon: "heart" },
 ];
 
 const CONTACT = {
-  twitter: "https://twitter.com/messages/compose?recipient_id=",
-  instagram: "https://instagram.com/direct/t/",
-  discord: "https://discord.gg/",
-  email: "mailto:katsuiriku@email.com",
+  twitter: "https://x.com/KRikuyt",
+  instagram: "https://www.instagram.com/katsuiriku_ch?obrf=MTJuZmxtMHVuYWN0dg==",
+  discord: "https://discord.com/users/759237473267613706",
+  facebook: "https://www.facebook.com/share/1ctEANbwXR/",
 };
 
 const PORTFOLIO_PLAYLIST = "https://youtube.com/playlist?list=PLNJ5KH9O1soM&si=lMcD65zGpCHeEC8i";
+
+/* Slot commish — data disimpan di data/slots.json (bisa diedit dari panel admin) */
+const SLOT_REPO = {
+  owner: "ChickenKatsui",
+  name: "katsuiriku-commis",
+  branch: "main",
+  path: "data/slots.json",
+};
+const SLOT_DEFAULT = {
+  total: 5,
+  filled: 0,
+  note: "Slot commish dibuka. Chat untuk konfirmasi slot.",
+  updatedAt: null,
+};
+let slotState = { ...SLOT_DEFAULT };
 
 /* ============================================================
    Icon set (inline SVG — more elegant than text symbols)
@@ -88,7 +103,283 @@ function fillContact(){
   set("contact-twitter", CONTACT.twitter);
   set("contact-instagram", CONTACT.instagram);
   set("contact-discord", CONTACT.discord);
-  set("contact-email", CONTACT.email);
+  set("contact-facebook", CONTACT.facebook);
+}
+
+/* ============================================================
+   Slot commish — tampil dari data/slots.json, edit lewat panel admin
+   ============================================================ */
+function normalizeSlots(raw){
+  const total = Math.max(0, Math.min(999, Number.parseInt(raw && raw.total, 10) || 0));
+  const filledRaw = Number.parseInt(raw && raw.filled, 10) || 0;
+  return {
+    total,
+    filled: Math.max(0, Math.min(total, filledRaw)),
+    note: String((raw && raw.note) || "").slice(0, 240),
+    updatedAt: (raw && raw.updatedAt) || null
+  };
+}
+
+function getSlotStatus(state = slotState){
+  const available = Math.max(0, state.total - state.filled);
+  if(state.total <= 0) return { available, label: "Closed", full: true };
+  if(available <= 0) return { available, label: "Full", full: true };
+  return { available, label: "Open", full: false };
+}
+
+function formatSlotDate(value){
+  if(!value) return "Update berkala";
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return "Update berkala";
+  return "Update " + new Intl.DateTimeFormat("id-ID", {
+    day: "numeric", month: "short", year: "numeric"
+  }).format(d);
+}
+
+function renderSlots(state = slotState){
+  const status = getSlotStatus(state);
+  const setText = (id, value) => { const el = document.getElementById(id); if(el) el.textContent = value; };
+
+  setText("slot-available", status.available);
+  setText("slot-total", state.total);
+  setText("slot-total-2", state.total);
+  setText("slot-filled", state.filled);
+  setText("slot-note", state.note || "Slot diupdate berkala. Chat untuk konfirmasi.");
+  setText("slot-updated", formatSlotDate(state.updatedAt));
+  setText("slot-status", status.label);
+  setText("hero-slot-text",
+    status.available > 0
+      ? `${status.available} slot tersedia`
+      : (state.total > 0 ? "Slot commish full" : "Cek info slot commish")
+  );
+
+  const statusEl = document.getElementById("slot-status");
+  if(statusEl){
+    statusEl.classList.toggle("is-full", status.full);
+    statusEl.classList.toggle("is-open", !status.full);
+  }
+  const heroSlot = document.getElementById("hero-slot");
+  if(heroSlot) heroSlot.classList.toggle("is-full", status.full);
+
+  const bar = document.getElementById("slot-bar-fill");
+  if(bar){
+    const pct = state.total > 0 ? Math.min(100, Math.round((state.filled / state.total) * 100)) : 0;
+    bar.style.width = pct + "%";
+  }
+
+  document.querySelectorAll("[data-slot-badge]").forEach(el => {
+    el.textContent = status.label;
+    el.classList.toggle("badge-full", status.full);
+  });
+}
+
+async function fetchJson(url, timeout = 4000){
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeout);
+  try{
+    const res = await fetch(url, { cache: "no-store", signal: controller.signal });
+    if(!res.ok) return null;
+    return await res.json();
+  }catch(e){
+    return null;
+  }finally{
+    window.clearTimeout(timer);
+  }
+}
+
+async function loadSlots(){
+  const { owner, name, branch, path } = SLOT_REPO;
+  const bust = Date.now();
+
+  // 1) File dari domain sendiri: cepat dan tetap jalan walau GitHub raw lambat.
+  const local = await fetchJson(`${path}?t=${bust}`, 3000);
+  if(local){
+    slotState = normalizeSlots(local);
+    renderSlots();
+  }
+
+  // 2) GitHub raw: update paling baru setelah panel admin menyimpan.
+  const remote = await fetchJson(
+    `https://raw.githubusercontent.com/${owner}/${name}/${branch}/${path}?t=${bust}`,
+    4500
+  );
+  if(remote){
+    const normalized = normalizeSlots(remote);
+    if(JSON.stringify(normalized) !== JSON.stringify(slotState)){
+      slotState = normalized;
+      renderSlots();
+    }
+  }
+}
+
+function initSlotRefresh(){
+  renderSlots();
+  loadSlots();
+  document.addEventListener("visibilitychange", () => {
+    if(!document.hidden) loadSlots();
+  });
+  window.setInterval(() => {
+    if(!document.hidden) loadSlots();
+  }, 60000);
+}
+
+/* Panel admin slot — token hanya disimpan di browser, tidak di website */
+function setAdminStatus(message, type){
+  const el = document.getElementById("admin-status");
+  if(!el) return;
+  el.textContent = message;
+  el.className = "admin-status" + (type ? " " + type : "");
+}
+
+function openSlotAdmin(){
+  const modal = document.getElementById("slot-admin");
+  if(!modal) return;
+  const total = document.getElementById("admin-total");
+  const filled = document.getElementById("admin-filled");
+  const note = document.getElementById("admin-note");
+  const token = document.getElementById("admin-token");
+  const remember = document.getElementById("admin-remember");
+  if(total) total.value = slotState.total;
+  if(filled) filled.value = slotState.filled;
+  if(note) note.value = slotState.note || "";
+  let saved = "";
+  try{ saved = localStorage.getItem("katsui_gh_token") || ""; }catch(e){}
+  if(token) token.value = saved;
+  if(remember) remember.checked = !!saved;
+  setAdminStatus("", "");
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+  window.setTimeout(() => { if(total) total.focus(); }, 60);
+}
+
+function closeSlotAdmin(){
+  const modal = document.getElementById("slot-admin");
+  if(!modal) return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+}
+
+function base64EncodeUnicode(str){
+  const bytes = new TextEncoder().encode(str);
+  let binary = "";
+  bytes.forEach(b => { binary += String.fromCharCode(b); });
+  return btoa(binary);
+}
+
+async function saveSlots(event){
+  event.preventDefault();
+  const totalInput = document.getElementById("admin-total");
+  const filledInput = document.getElementById("admin-filled");
+  const noteInput = document.getElementById("admin-note");
+  const tokenInput = document.getElementById("admin-token");
+  const rememberInput = document.getElementById("admin-remember");
+  const saveBtn = document.getElementById("admin-save");
+  if(!totalInput || !filledInput || !tokenInput || !saveBtn) return;
+
+  const rawTotal = Number.parseInt(totalInput.value, 10);
+  const rawFilled = Number.parseInt(filledInput.value, 10);
+  const note = (noteInput ? noteInput.value : "").trim().slice(0, 240);
+  const token = tokenInput.value.trim();
+
+  if(!Number.isFinite(rawTotal) || rawTotal < 0 || !Number.isFinite(rawFilled) || rawFilled < 0){
+    setAdminStatus("Isi total dan slot terisi dengan angka 0 atau lebih.", "err");
+    return;
+  }
+  const total = Math.min(999, rawTotal);
+  const filled = Math.min(999, rawFilled);
+  if(filled > total){
+    setAdminStatus("Slot terisi tidak boleh lebih besar dari total slot.", "err");
+    return;
+  }
+  if(!token){
+    setAdminStatus("Masukkan token GitHub dulu.", "err");
+    tokenInput.focus();
+    return;
+  }
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Menyimpan...";
+  setAdminStatus("Menyimpan ke GitHub...", "");
+
+  const { owner, name, branch, path } = SLOT_REPO;
+  const api = `https://api.github.com/repos/${owner}/${name}/contents/${path}`;
+  const headers = {
+    "Authorization": `Bearer ${token}`,
+    "Accept": "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28"
+  };
+
+  try{
+    let sha = "";
+    const getRes = await fetch(`${api}?ref=${encodeURIComponent(branch)}`, { headers, cache: "no-store" });
+    if(getRes.ok){
+      const info = await getRes.json();
+      sha = info.sha || "";
+    }else if(getRes.status !== 404){
+      const err = await getRes.json().catch(() => ({}));
+      throw new Error(err.message || `Gagal membaca data slot (${getRes.status}).`);
+    }
+
+    const data = {
+      total,
+      filled,
+      note: note || "Slot diupdate berkala. Chat untuk konfirmasi slot.",
+      updatedAt: new Date().toISOString()
+    };
+    const payload = {
+      message: `Update slot commish: ${Math.max(0, total - filled)} tersedia`,
+      content: base64EncodeUnicode(JSON.stringify(data, null, 2) + "\n"),
+      branch
+    };
+    if(sha) payload.sha = sha;
+
+    const putRes = await fetch(api, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify(payload)
+    });
+    if(!putRes.ok){
+      const err = await putRes.json().catch(() => ({}));
+      throw new Error(err.message || `Gagal menyimpan slot (${putRes.status}).`);
+    }
+
+    slotState = normalizeSlots(data);
+    renderSlots();
+    try{
+      if(rememberInput && rememberInput.checked) localStorage.setItem("katsui_gh_token", token);
+      else localStorage.removeItem("katsui_gh_token");
+    }catch(e){}
+    setAdminStatus("Tersimpan! Web live biasanya update dalam ±1 menit.", "ok");
+    saveBtn.textContent = "Tersimpan";
+    window.setTimeout(() => {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Simpan slot";
+    }, 1600);
+    window.setTimeout(loadSlots, 4000);
+  }catch(err){
+    setAdminStatus(err.message || "Gagal menyimpan slot.", "err");
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Simpan slot";
+  }
+}
+
+function initSlotAdmin(){
+  const modal = document.getElementById("slot-admin");
+  if(!modal) return;
+  const openBtn = document.getElementById("open-slot-admin");
+  if(openBtn) openBtn.addEventListener("click", openSlotAdmin);
+  modal.querySelectorAll("[data-close]").forEach(el => el.addEventListener("click", closeSlotAdmin));
+  const form = document.getElementById("slot-form");
+  if(form) form.addEventListener("submit", saveSlots);
+  document.addEventListener("keydown", (e) => {
+    if(e.key === "Escape" && modal.classList.contains("open")) closeSlotAdmin();
+  });
+  if(location.hash === "#admin" || location.hash === "#slot-admin") openSlotAdmin();
+  window.addEventListener("hashchange", () => {
+    if(location.hash === "#admin" || location.hash === "#slot-admin") openSlotAdmin();
+  });
 }
 
 /* ============================================================
@@ -158,5 +449,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initNav();
   initActiveLinks();
   initReveal();
+  initSlotRefresh();
+  initSlotAdmin();
   document.getElementById("year").textContent = new Date().getFullYear();
 });

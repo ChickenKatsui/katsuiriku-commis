@@ -36,6 +36,7 @@
     </button>
     <nav class="nav" id="main-nav" aria-label="Navigasi utama">
       <a href="#home">Home</a>
+      <a href="#slots">Slot</a>
       <a href="#clip">Clip</a>
       <a href="#shorts">Shorts</a>
       <a href="#vod">VOD</a>
@@ -60,6 +61,11 @@
       <p class="quote">“KatsuiRiku Si Clipper Doggo Disini”</p>
       <div class="hero-rule"></div>
       <p class="hero-meta">Clip <span>·</span> Shorts / Reels / TikTok <span>·</span> VOD Editing</p>
+      <a class="hero-slot" id="hero-slot" href="#slots">
+        <span class="hero-slot-dot" aria-hidden="true"></span>
+        <span id="hero-slot-text">Cek info slot commish</span>
+        <span class="hero-slot-arrow" aria-hidden="true">→</span>
+      </a>
     </div>
     <div class="hero-art reveal">
       <div class="art-frame">
@@ -94,6 +100,30 @@
     </div>
   </section>
 
+  <!-- SLOT INFO -->
+  <section id="slots" class="section section-slots">
+    <div class="slot-board reveal" aria-live="polite">
+      <div class="slot-copy">
+        <span class="section-kicker">Info — Slot Commish</span>
+        <h2 class="slot-title">Slot Commish</h2>
+        <p class="slot-note" id="slot-note">Slot commish dibuka. Chat untuk konfirmasi slot.</p>
+        <p class="slot-updated" id="slot-updated">Update berkala</p>
+      </div>
+      <div class="slot-status-wrap">
+        <div class="slot-count">
+          <strong id="slot-available">5</strong>
+          <span>/ <span id="slot-total">5</span> slot</span>
+        </div>
+        <div class="slot-bar" aria-hidden="true"><span id="slot-bar-fill"></span></div>
+        <div class="slot-meta">
+          <span class="slot-status is-open" id="slot-status">Open</span>
+          <span class="slot-filled">Terisi <span id="slot-filled">0</span> dari <span id="slot-total-2">5</span></span>
+        </div>
+        <a class="btn btn-slot" href="#contact">Tanya Slot <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+
   <!-- CLIP -->
   <section id="clip" class="section">
     <div class="section-head reveal">
@@ -105,7 +135,7 @@
       <article class="card card-gold card-center reveal">
         <div class="card-top">
           <h3>Katsui Clip</h3>
-          <span class="badge badge-gold">Open</span>
+          <span class="badge badge-gold" data-slot-badge>Open</span>
         </div>
         <p class="price">Rp60.000 <small>/ menit</small></p>
         <div class="includes-block">
@@ -178,14 +208,14 @@
       <article class="card card-rose card-center reveal">
         <div class="card-top">
           <h3>VOD Clip Lite</h3>
-          <span class="badge">Open</span>
+          <span class="badge" data-slot-badge>Open</span>
         </div>
         <p class="price">Rp60.000 <small>/ menit</small></p>
         <div class="includes-block">
           <span class="includes-label">Termasuk</span>
           <ul class="includes-list">
             <li>2x Revisi</li>
-            <li>Format 9:16</li>
+            <li>Format 16:9</li>
             <li>File final</li>
             <li>Siap upload</li>
           </ul>
@@ -238,22 +268,22 @@
       <a class="contact-card reveal" id="contact-twitter" href="#" target="_blank" rel="noopener">
         <span class="contact-icon" data-icon="x"></span>
         <strong>Twitter / X</strong>
-        <small>DM untuk order</small>
+        <small>DM / profile</small>
       </a>
       <a class="contact-card reveal" id="contact-instagram" href="#" target="_blank" rel="noopener">
         <span class="contact-icon" data-icon="instagram"></span>
         <strong>Instagram</strong>
-        <small>DM untuk order</small>
+        <small>DM / profile</small>
       </a>
       <a class="contact-card reveal" id="contact-discord" href="#" target="_blank" rel="noopener">
         <span class="contact-icon" data-icon="discord"></span>
         <strong>Discord</strong>
-        <small>Server / DM</small>
+        <small>Profil Discord</small>
       </a>
     </div>
     <div class="contact-actions reveal">
-      <a class="btn btn-secondary" id="contact-email" href="#">Email</a>
-      <a class="btn btn-ghost" href="https://trakteer.id/KatsuiRiku" target="_blank" rel="noopener">Support via Trakteer</a>
+      <a class="btn btn-secondary" id="contact-facebook" href="#" target="_blank" rel="noopener"><span class="btn-icon" data-icon="facebook" aria-hidden="true"></span> Facebook</a>
+      <a class="btn btn-ghost" href="https://sociabuzz.com/ikatsu/tribe" target="_blank" rel="noopener"><span class="btn-icon" data-icon="heart" aria-hidden="true"></span> Support via Sociabuzz</a>
     </div>
     <div class="socials reveal" id="socials" aria-label="Social media"></div>
   </section>
@@ -263,7 +293,7 @@
 <footer class="site-footer">
   <div class="footer-inner">
     <p>© <span id="year"></span> KatsuiRiku Ch. All rights reserved.</p>
-    <p class="footer-note">Open commission · 2026</p>
+    <p class="footer-note">Open commission · 2026 · <button class="admin-link" id="open-slot-admin" type="button">Admin slot</button></p>
   </div>
 </footer>
 
@@ -275,6 +305,32 @@
   <a href="#portfolio" class="dock-item"><span class="dock-icon" data-icon="play"></span><small>Portfolio</small></a>
   <a href="#contact" class="dock-item"><span class="dock-icon" data-icon="mail"></span><small>Contact</small></a>
 </nav>
+
+<!-- Admin slot -->
+<div class="slot-admin" id="slot-admin" aria-hidden="true">
+  <div class="slot-admin-backdrop" data-close></div>
+  <div class="slot-admin-card" role="dialog" aria-modal="true" aria-labelledby="slot-admin-title">
+    <button class="slot-admin-close" type="button" aria-label="Tutup" data-close>×</button>
+    <span class="section-kicker">Admin</span>
+    <h2 id="slot-admin-title">Edit Slot Commish</h2>
+    <p class="slot-admin-sub">Ubah jumlah slot tanpa membuka GitHub. Data disimpan ke repo dan tampil di web setelah build Pages.</p>
+    <form id="slot-form" class="slot-form">
+      <div class="slot-form-row">
+        <label>Total slot<input id="admin-total" type="number" min="0" max="999" step="1" required></label>
+        <label>Slot terisi<input id="admin-filled" type="number" min="0" max="999" step="1" required></label>
+      </div>
+      <label>Catatan<textarea id="admin-note" rows="3" maxlength="240"></textarea></label>
+      <label>Token GitHub<input id="admin-token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_..."></label>
+      <label class="slot-check"><input id="admin-remember" type="checkbox"> Ingat token di browser ini</label>
+      <p class="slot-admin-hint">Token hanya disimpan di browser ini, tidak di website. Butuh akses <strong>Contents: Read and write</strong> ke repo ini.</p>
+      <div class="slot-form-actions">
+        <button class="btn btn-primary" id="admin-save" type="submit">Simpan slot</button>
+        <button class="btn btn-ghost" type="button" data-close>Batal</button>
+      </div>
+      <p class="admin-status" id="admin-status" role="status"></p>
+    </form>
+  </div>
+</div>
 
 <script src="assets/js/main.js"></script>
 <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
