@@ -21,7 +21,7 @@ Website commission statis (HTML/CSS/JS) dengan nuansa blush rose, cream, cocoa, 
 
 - Katsui Clip: **Rp60.000 / menit** — kartu gradient royal gold
 - VOD Clip Lite: **Rp60.000 / menit** — kartu soft rose, format **16:9**
-- Shorts: Rp50.000 / Rp100.000 / Rp150.000
+- Shorts: Shorts Reguler **Rp50.000 / video (1 menit)**, Paket 5 Shorts **Rp240.000**, durasi lebih panjang Rp100.000 / Rp150.000
 - Info slot commish: angka slot tampil di hero, section khusus, dan badge kartu
 - Top Commish: leaderboard manual **top 5 client** berdasarkan jumlah commission per bulan
 - Portfolio Shorts: playlist `https://youtube.com/playlist?list=PLNJ5KH9O1soM&si=lMcD65zGpCHeEC8i`
@@ -41,7 +41,7 @@ Buka `assets/js/main.js`:
 
 Link/tombol langsung ada di `index.html`.
 
-Setelah mengubah `assets/css/style.css`, `assets/js/main.js`, `admin/admin.css`, atau `admin/admin.js`, ganti angka `?v=...` di `index.html` dan `admin/index.html` agar browser/CDN tidak memakai cache lama. Versi saat ini: **20261022b**. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
+Setelah mengubah `assets/css/style.css`, `assets/js/main.js`, `admin/admin.css`, atau `admin/admin.js`, ganti angka `?v=...` di `index.html` dan `admin/index.html` agar browser/CDN tidak memakai cache lama. Versi saat ini: **20261101a**. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
 
 ## Admin panel & data live
 
