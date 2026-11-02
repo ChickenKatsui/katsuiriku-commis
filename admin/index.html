@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fredoka:wght@400;500;600;700&family=Manrope:wght@500;700;800&family=Ubuntu:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261101a" />
-<link rel="stylesheet" href="admin.css?v=20261101a" />
+<link rel="stylesheet" href="../assets/css/style.css?v=20261102a" />
+<link rel="stylesheet" href="admin.css?v=20261102a" />
 </head>
 <body class="admin-body">
 
@@ -41,7 +41,7 @@
     <p class="admin-hint">Panel admin dan data live memakai Supabase. Situs publik tetap jalan dengan data cadangan selama setup belum selesai.</p>
     <ol class="admin-steps">
       <li>Buat project gratis di <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">Supabase</a>.</li>
-      <li>Jalankan SQL setup dari panduan di repo (tabel, RLS, realtime).</li>
+      <li>Jalankan SQL setup dari panduan di repo (tabel, RLS, realtime). Jika database sudah ada, jalankan juga migrasi status layanan.</li>
       <li>Buat user admin di <strong>Authentication → Users</strong>, lalu masukkan UUID-nya ke tabel <code>admin_users</code>.</li>
       <li>Salin <strong>Project URL</strong> dan <strong>anon public key</strong> ke <code>assets/js/supabase-config.js</code>.</li>
       <li>Refresh halaman ini, lalu login.</li>
@@ -85,6 +85,7 @@
 
     <div class="admin-tabs" role="tablist" aria-label="Menu admin">
       <button class="admin-tab active" type="button" data-tab="slots" role="tab" aria-selected="true">Slot Commish</button>
+      <button class="admin-tab" type="button" data-tab="services" role="tab" aria-selected="false">Status Layanan</button>
       <button class="admin-tab" type="button" data-tab="leaderboard" role="tab" aria-selected="false">Top Commish</button>
     </div>
 
@@ -118,6 +119,60 @@
       </form>
     </section>
 
+    <!-- SERVICES -->
+    <section class="admin-card admin-panel" id="tab-services" role="tabpanel" hidden>
+      <div class="admin-section-head">
+        <div>
+          <span class="section-kicker">Status layanan</span>
+          <h2>Open / Closed</h2>
+        </div>
+        <span class="admin-live">Manual</span>
+      </div>
+      <form id="service-form" class="admin-form">
+        <p class="admin-hint">Atur status order tiap layanan. Badge dan tombol order di website akan mengikuti status ini.</p>
+        <p class="admin-hint admin-hint-sm" id="service-setup-hint" hidden>Kolom status layanan belum ada di Supabase. Jalankan SQL migrasi di <a href="https://github.com/ChickenKatsui/katsuiriku-commis/blob/main/SUPABASE_SETUP.md" target="_blank" rel="noopener">SUPABASE_SETUP.md</a>, lalu refresh halaman ini.</p>
+        <div class="admin-service-list">
+          <label class="admin-service-row">
+            <span class="admin-service-copy">
+              <strong>Katsui Clip</strong>
+              <small>Clip untuk channel KatsuiRiku</small>
+            </span>
+            <span class="admin-switch">
+              <input id="clip-open" type="checkbox" role="switch" checked />
+              <span class="admin-switch-track" aria-hidden="true"></span>
+              <span class="admin-switch-label" data-switch-label="clip-open">Open</span>
+            </span>
+          </label>
+          <label class="admin-service-row">
+            <span class="admin-service-copy">
+              <strong>Shorts / Reels / TikTok</strong>
+              <small>Shorts reguler &amp; paket 5 short</small>
+            </span>
+            <span class="admin-switch">
+              <input id="shorts-open" type="checkbox" role="switch" checked />
+              <span class="admin-switch-track" aria-hidden="true"></span>
+              <span class="admin-switch-label" data-switch-label="shorts-open">Open</span>
+            </span>
+          </label>
+          <label class="admin-service-row">
+            <span class="admin-service-copy">
+              <strong>VOD Clip Lite</strong>
+              <small>VOD 16:9 untuk sosial media</small>
+            </span>
+            <span class="admin-switch">
+              <input id="vod-open" type="checkbox" role="switch" checked />
+              <span class="admin-switch-track" aria-hidden="true"></span>
+              <span class="admin-switch-label" data-switch-label="vod-open">Open</span>
+            </span>
+          </label>
+        </div>
+        <div class="admin-form-actions">
+          <button class="btn btn-primary" type="submit" id="service-save">Simpan status</button>
+        </div>
+        <p class="admin-status" id="service-status" role="status"></p>
+      </form>
+    </section>
+
     <!-- TOP COMMISH -->
     <section class="admin-card admin-panel" id="tab-leaderboard" role="tabpanel" hidden>
       <div class="admin-section-head">
@@ -148,7 +203,7 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" defer></script>
-<script src="../assets/js/supabase-config.js?v=20261101a" defer></script>
-<script src="admin.js?v=20261101a" defer></script>
+<script src="../assets/js/supabase-config.js?v=20261102a" defer></script>
+<script src="admin.js?v=20261102a" defer></script>
 </body>
 </html>

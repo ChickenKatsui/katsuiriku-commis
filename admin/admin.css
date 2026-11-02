@@ -69,6 +69,7 @@
 
 .admin-form{display:flex;flex-direction:column;gap:.8rem;margin-top:1rem;}
 .admin-form .btn-primary{margin-top:0;}
+.admin-form .btn:disabled{opacity:.55;cursor:not-allowed;filter:saturate(.7);box-shadow:none;}
 .admin-form-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.15rem;}
 .admin-form-actions .btn{margin-top:0;flex:1;min-width:140px;}
 .admin-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
@@ -99,6 +100,45 @@
 .admin-preview strong{
   font-family:'Fredoka',sans-serif;font-size:1.15rem;font-weight:600;color:var(--rose-deep);
 }
+
+.admin-service-list{display:flex;flex-direction:column;gap:.55rem;margin-top:.2rem;}
+.admin-service-row{
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding:.85rem .95rem;border-radius:16px;
+  background:rgba(255,255,255,.34);border:1px solid rgba(58,38,32,.08);
+  cursor:pointer;
+}
+.admin-service-copy{display:flex;flex-direction:column;gap:.15rem;min-width:0;}
+.admin-service-copy strong{
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:1rem;color:var(--ink);
+}
+.admin-service-copy small{
+  font-family:'Ubuntu',sans-serif;font-size:.76rem;line-height:1.4;color:var(--muted);
+}
+.admin-switch{display:inline-flex;align-items:center;gap:.55rem;flex:0 0 auto;}
+.admin-switch input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
+.admin-switch-track{
+  position:relative;width:46px;height:26px;border-radius:999px;
+  background:rgba(58,38,32,.18);border:1px solid rgba(58,38,32,.12);
+  transition:background .2s ease,border-color .2s ease;
+}
+.admin-switch-track::after{
+  content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
+  background:#FFF9F1;box-shadow:0 2px 5px rgba(58,38,32,.22);
+  transition:transform .2s ease;
+}
+.admin-switch input:checked + .admin-switch-track{
+  background:linear-gradient(135deg,#6F8B7E,#8FAEA0);border-color:rgba(76,106,94,.45);
+}
+.admin-switch input:checked + .admin-switch-track::after{transform:translateX(20px);}
+.admin-switch input:focus-visible + .admin-switch-track{box-shadow:0 0 0 3px rgba(111,139,126,.2);}
+.admin-switch-label{
+  min-width:3.8rem;font-family:'Ubuntu',sans-serif;font-size:.7rem;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+}
+.admin-switch-label.is-open{color:#4C6A5E;}
+.admin-switch-label.is-closed{color:#A24E4E;}
+
 .admin-status{min-height:1.1rem;font-size:.78rem;line-height:1.45;color:var(--muted);}
 .admin-status.ok{color:#4C6A5E;font-weight:700;}
 .admin-status.err{color:#A24E4E;font-weight:700;}
@@ -181,6 +221,10 @@
   .admin-card h1{font-size:2.4rem;}
   .admin-card h2{font-size:1.9rem;}
   .admin-grid-2{grid-template-columns:1fr;}
+  .admin-service-row{padding:.75rem .8rem;gap:.7rem;}
+  .admin-service-copy strong{font-size:.94rem;}
+  .admin-service-copy small{font-size:.72rem;}
+  .admin-switch-label{min-width:3.2rem;font-size:.64rem;}
   .admin-dashboard-head{align-items:flex-start;flex-direction:column;gap:.5rem;}
   .admin-tabs{width:100%;}
   .admin-tab{flex:1;padding:.55rem .6rem;font-size:.72rem;}

@@ -1,6 +1,6 @@
 # KatsuiRiku Ch — Commission (Static Site + Supabase)
 
-Website commission statis (HTML/CSS/JS) dengan nuansa blush rose, cream, cocoa, sage, dan moon gold. Responsive + mobile dock. Data slot dan leaderboard **Top Commish** memakai Supabase supaya bisa diedit dari admin panel terpisah dan update realtime.
+Website commission statis (HTML/CSS/JS) dengan nuansa blush rose, cream, cocoa, sage, dan moon gold. Responsive + mobile dock. Data slot, status layanan, dan leaderboard **Top Commish** memakai Supabase supaya bisa diedit dari admin panel terpisah dan update realtime.
 
 ## Struktur
 
@@ -9,9 +9,10 @@ Website commission statis (HTML/CSS/JS) dengan nuansa blush rose, cream, cocoa, 
 - `assets/js/main.js` — data brand/sosmed + pembacaan data live (EDIT DI SINI)
 - `assets/js/supabase-config.js` — URL + anon key Supabase (isi setelah setup)
 - `admin/` — panel admin terpisah (`index.html`, `admin.css`, `admin.js`)
-- `data/slots.json` — fallback slot kalau Supabase belum aktif
+- `data/slots.json` — fallback slot + status layanan kalau Supabase belum aktif
 - `data/top-commish.json` — fallback leaderboard kosong
 - `SUPABASE_SETUP.md` — panduan SQL, Auth, RLS, realtime
+- `supabase/migrations/20261102_service_status.sql` — migrasi kolom status layanan
 - `assets/img/logo-character.png` — logo headcrop karakter (header, favicon)
 - `assets/img/character.png` — ilustrasi karakter full body (hero)
 - `assets/img/logo.svg` — logo paw cadangan (tidak dipakai)
@@ -22,7 +23,9 @@ Website commission statis (HTML/CSS/JS) dengan nuansa blush rose, cream, cocoa, 
 - Katsui Clip: **Rp60.000 / menit** — kartu gradient royal gold
 - VOD Clip Lite: **Rp60.000 / menit** — kartu soft rose, format **16:9**
 - Shorts: Shorts Reguler **Rp50.000 / video (1 menit)**, Paket 5 Shorts **Rp240.000**, durasi lebih panjang Rp100.000 / Rp150.000
-- Info slot commish: angka slot tampil di hero, section khusus, dan badge kartu
+- Info slot commish: angka slot tampil di hero dan section khusus; badge kartu menampilkan status layanan (Open/Closed/Full)
+- Waktu pengerjaan: **1–3 hari** untuk Shorts, Clip, VOD, dan request editing lainnya; bisa lebih lama untuk durasi panjang atau demand editing baru
+- Status layanan: Katsui Clip, Shorts, dan VOD bisa diatur **Open / Closed** dari admin
 - Top Commish: leaderboard manual **top 5 client** berdasarkan jumlah commission per bulan
 - Portfolio Shorts: playlist `https://youtube.com/playlist?list=PLNJ5KH9O1soM&si=lMcD65zGpCHeEC8i`
 - Portfolio VOD & Kategori Shorts: dihapus
@@ -41,7 +44,7 @@ Buka `assets/js/main.js`:
 
 Link/tombol langsung ada di `index.html`.
 
-Setelah mengubah `assets/css/style.css`, `assets/js/main.js`, `admin/admin.css`, atau `admin/admin.js`, ganti angka `?v=...` di `index.html` dan `admin/index.html` agar browser/CDN tidak memakai cache lama. Versi saat ini: **20261101a**. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
+Setelah mengubah `assets/css/style.css`, `assets/js/main.js`, `admin/admin.css`, atau `admin/admin.js`, ganti angka `?v=...` di `index.html` dan `admin/index.html` agar browser/CDN tidak memakai cache lama. Versi saat ini: **20261102a**. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
 
 ## Admin panel & data live
 
@@ -56,7 +59,7 @@ Halaman ini tidak dilink dari website publik dan memakai `noindex` + `robots.txt
 Ikuti langkah lengkap di **`SUPABASE_SETUP.md`**. Ringkasnya:
 
 1. Buat project Supabase.
-2. Jalankan SQL setup (tabel `site_data`, `admin_users`, RLS, realtime).
+2. Jalankan SQL setup (tabel `site_data`, `admin_users`, RLS, realtime). Untuk database yang sudah ada, jalankan juga migrasi status layanan.
 3. Buat user admin di **Authentication → Users** (auto-confirm), lalu masukkan UUID-nya ke `admin_users`.
 4. Salin **Project URL** + **anon public key** ke `assets/js/supabase-config.js`.
 5. Buka `/admin/`, login.
@@ -66,6 +69,12 @@ Ikuti langkah lengkap di **`SUPABASE_SETUP.md`**. Ringkasnya:
 ### Edit slot
 
 Tab **Slot Commish** → isi total, terisi, catatan → simpan. Website update realtime (fallback polling ±60 detik kalau realtime mati).
+
+### Edit status layanan
+
+Tab **Status Layanan** → toggle **Katsui Clip**, **Shorts / Reels / TikTok**, dan **VOD Clip Lite** ke Open/Closed → simpan. Badge dan tombol order di website mengikuti status masing-masing layanan.
+
+Untuk database yang sudah ada, jalankan SQL migrasi di **`SUPABASE_SETUP.md`** agar kolom `clip_open`, `shorts_open`, dan `vod_open` ditambahkan.
 
 ### Edit Top Commish
 
@@ -84,7 +93,7 @@ Tab **Top Commish** → isi judul + periode → isi maksimal 5 baris (nama, juml
 
 Selama `supabase-config.js` kosong, website publik memakai:
 
-- `data/slots.json` untuk slot
+- `data/slots.json` untuk slot + status layanan
 - `data/top-commish.json` untuk leaderboard (default kosong)
 
 Jadi situs tetap jalan tanpa Supabase. Setelah config diisi, Supabase menjadi sumber utama.

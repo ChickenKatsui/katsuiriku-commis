@@ -34,6 +34,9 @@ const SITE_DATA_DEFAULT = {
   slot_total: 5,
   slot_filled: 0,
   slot_note: "Slot commish dibuka. Chat untuk konfirmasi slot.",
+  clip_open: true,
+  shorts_open: true,
+  vod_open: true,
   leaderboard_title: "Top Commish",
   leaderboard_period: "Bulan Ini",
   leaderboard: [],
@@ -123,6 +126,12 @@ function clampInt(value, min, max, fallback = 0){
   return Math.max(min, Math.min(max, parsed));
 }
 
+function normalizeOpen(value){
+  if(value === false || value === 0) return false;
+  if(typeof value === "string" && /^(false|0|closed)$/i.test(value.trim())) return false;
+  return true;
+}
+
 function normalizeLeaderboard(raw){
   let rows = raw;
   if(typeof rows === "string"){
@@ -158,6 +167,9 @@ function normalizeSiteData(raw){
     slot_total: total,
     slot_filled: Math.min(total, filled),
     slot_note: String(source.slot_note ?? source.note ?? "").slice(0, 240),
+    clip_open: normalizeOpen(source.clip_open ?? source.clipOpen),
+    shorts_open: normalizeOpen(source.shorts_open ?? source.shortsOpen),
+    vod_open: normalizeOpen(source.vod_open ?? source.vodOpen),
     leaderboard_title: String(source.leaderboard_title || "Top Commish").slice(0, 80),
     leaderboard_period: String(source.leaderboard_period || "Bulan Ini").slice(0, 60),
     leaderboard: normalizeLeaderboard(source.leaderboard ?? source.entries),
@@ -170,6 +182,24 @@ function getSlotStatus(state = siteData){
   if(state.slot_total <= 0) return { available, label: "Closed", full: true };
   if(available <= 0) return { available, label: "Full", full: true };
   return { available, label: "Open", full: false };
+}
+
+function getServiceStatus(service, state = siteData){
+  const slot = getSlotStatus(state);
+  const manuallyOpen = normalizeOpen(state[service + "_open"]);
+
+  if(!manuallyOpen){
+    return { label: "Closed", full: true, open: false, reason: "closed" };
+  }
+  if(slot.full){
+    return {
+      label: state.slot_total > 0 ? "Full" : "Closed",
+      full: true,
+      open: false,
+      reason: "slots"
+    };
+  }
+  return { label: "Open", full: false, open: true, reason: "open" };
 }
 
 function formatSlotDate(value){
@@ -233,10 +263,44 @@ function renderSlots(state = siteData){
       : 0;
     bar.style.width = pct + "%";
   }
+}
 
-  document.querySelectorAll("[data-slot-badge]").forEach(el => {
-    el.textContent = status.label;
-    el.classList.toggle("badge-full", status.full);
+function renderServices(state = siteData){
+  document.querySelectorAll("[data-service-badge]").forEach(el => {
+    const service = el.dataset.serviceBadge;
+    if(!service) return;
+    const serviceStatus = getServiceStatus(service, state);
+    el.textContent = serviceStatus.label;
+    el.classList.toggle("badge-full", !serviceStatus.open);
+  });
+
+  document.querySelectorAll("[data-service-order]").forEach(el => {
+    const service = el.dataset.serviceOrder;
+    if(!service) return;
+    const serviceStatus = getServiceStatus(service, state);
+
+    if(!el.dataset.defaultLabel) el.dataset.defaultLabel = el.textContent.trim();
+    if(!el.dataset.defaultHref && el.getAttribute("href")){
+      el.dataset.defaultHref = el.getAttribute("href");
+    }
+
+    if(serviceStatus.open){
+      el.textContent = el.dataset.defaultLabel;
+      el.removeAttribute("aria-disabled");
+      el.removeAttribute("tabindex");
+      el.classList.remove("is-disabled");
+      el.removeAttribute("title");
+      if(el.dataset.defaultHref) el.setAttribute("href", el.dataset.defaultHref);
+    }else{
+      el.textContent = serviceStatus.reason === "slots" ? "Slot Full" : "Layanan Ditutup";
+      el.setAttribute("aria-disabled", "true");
+      el.setAttribute("tabindex", "-1");
+      el.classList.add("is-disabled");
+      el.title = serviceStatus.reason === "slots"
+        ? "Slot commish sedang penuh."
+        : "Layanan sedang ditutup.";
+      el.removeAttribute("href");
+    }
   });
 }
 
@@ -295,6 +359,7 @@ function renderLeaderboard(){
 
 function renderSite(){
   renderSlots();
+  renderServices();
   renderLeaderboard();
 }
 
@@ -326,6 +391,9 @@ async function loadFallback(){
     next.slot_total = clampInt(slots.total, 0, 999, 0);
     next.slot_filled = clampInt(slots.filled, 0, next.slot_total, 0);
     next.slot_note = String(slots.note || "").slice(0, 240);
+    next.clip_open = normalizeOpen(slots.clipOpen ?? slots.clip_open ?? next.clip_open);
+    next.shorts_open = normalizeOpen(slots.shortsOpen ?? slots.shorts_open ?? next.shorts_open);
+    next.vod_open = normalizeOpen(slots.vodOpen ?? slots.vod_open ?? next.vod_open);
     next.updated_at = slots.updatedAt || next.updated_at;
     touched = true;
   }

@@ -1,6 +1,6 @@
 # Supabase Setup — Admin & Data Live
 
-Website ini tetap static (GitHub Pages), tapi data slot + Top Commish disimpan di **Supabase**. Admin login lewat **Supabase Auth**, dan hanya user yang terdaftar di tabel `admin_users` yang boleh menulis. Pengunjung biasa hanya bisa membaca.
+Website ini tetap static (GitHub Pages), tapi data slot, status layanan, dan Top Commish disimpan di **Supabase**. Admin login lewat **Supabase Auth**, dan hanya user yang terdaftar di tabel `admin_users` yang boleh menulis. Pengunjung biasa hanya bisa membaca.
 
 > **Penting:** jangan pernah menaruh `service_role` key di website. Yang dipakai di browser hanya **Project URL** + **anon public key**. Anon key aman dipublikasikan karena RLS yang membatasi akses tulis.
 
@@ -53,6 +53,9 @@ create table if not exists public.site_data (
   slot_total integer not null default 5 check (slot_total >= 0),
   slot_filled integer not null default 0 check (slot_filled >= 0),
   slot_note text not null default 'Slot commish dibuka. Chat untuk konfirmasi slot.',
+  clip_open boolean not null default true,
+  shorts_open boolean not null default true,
+  vod_open boolean not null default true,
   leaderboard_title text not null default 'Top Commish',
   leaderboard_period text not null default 'Bulan Ini',
   leaderboard jsonb not null default '[]'::jsonb
@@ -108,6 +111,19 @@ end $$;
 
 Kalau muncul pesan tabel/fungsi sudah ada, itu aman — SQL dibuat idempotent sebisa mungkin.
 
+### Migrasi status layanan (database yang sudah ada)
+
+Kalau `site_data` sudah dibuat sebelumnya, `create table if not exists` tidak menambah kolom baru. Jalankan SQL ini sekali di **SQL Editor**:
+
+```sql
+alter table public.site_data
+  add column if not exists clip_open boolean not null default true,
+  add column if not exists shorts_open boolean not null default true,
+  add column if not exists vod_open boolean not null default true;
+```
+
+Setelah itu refresh halaman `/admin/`. File SQL yang sama juga tersedia di `supabase/migrations/20261102_service_status.sql`.
+
 ## 3. Buat user admin
 
 1. Buka **Authentication → Users → Add user**.
@@ -157,7 +173,7 @@ Buka:
 
 `https://chickenkatsui.github.io/katsuiriku-commis/admin/`
 
-Login pakai email + password admin. Kalau berhasil, dashboard Slot dan Top Commish muncul.
+Login pakai email + password admin. Kalau berhasil, dashboard Slot, Status Layanan, dan Top Commish muncul.
 
 Halaman admin tidak dilink dari website publik dan diberi `noindex`. Tapi keamanan sebenarnya bukan dari URL rahasia — keamanan ada di **Supabase Auth + RLS**: user biasa yang membuka `/admin/` hanya melihat halaman login, dan walaupun memaksa melihat tampilan dashboard, semua tulis akan ditolak RLS.
 
@@ -166,6 +182,15 @@ Halaman admin tidak dilink dari website publik dan diberi `noindex`. Tapi keaman
 ### Slot Commish
 
 Isi **Total slot**, **Slot terisi**, dan catatan → **Simpan slot**. Website publik langsung update lewat Supabase Realtime (kalau realtime aktif; kalau tidak, fallback refresh ±1 menit).
+
+### Status layanan (open/closed)
+
+1. Buka tab **Status Layanan**.
+2. Toggle **Katsui Clip**, **Shorts / Reels / TikTok**, atau **VOD Clip Lite** ke **Open** / **Closed**.
+3. Klik **Simpan status**.
+4. Badge dan tombol order di website langsung mengikuti status. Kalau layanan ditutup, tombol order berubah menjadi **Layanan Ditutup**.
+
+Status layanan berbeda dari slot commish. Slot tetap diatur di tab **Slot Commish**; layanan bisa ditutup sementara walaupun slot masih tersedia.
 
 ### Top Commish (manual, top 5)
 
@@ -206,6 +231,7 @@ Jadi situs tetap tampil normal. Setelah config diisi dan SQL dijalankan, Supabas
 | "Gagal memeriksa akses admin" / function not found | SQL setup belum dijalankan atau `grant execute` gagal. Jalankan ulang bagian `is_admin`. |
 | Simpan gagal / RLS error | User belum ada di `admin_users`, atau policy RLS belum dibuat. Cek **Table Editor → site_data → RLS**. |
 | Website tidak update realtime | Aktifkan `site_data` di **Database → Replication**. Fallback refresh ±1 menit tetap jalan. |
+| Tab Status Layanan menampilkan "kolom status layanan belum ada" | Jalankan SQL migrasi status layanan di bagian **2**, lalu refresh `/admin/`. |
 | `slot_filled_lte_total` error | Slot terisi lebih besar dari total. Kecilkan filled atau besarkan total. |
 
 ## 10. Keamanan

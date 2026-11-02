@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fredoka:wght@400;500;600;700&family=Manrope:wght@500;700;800&family=Ubuntu:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=20261101a" />
+<link rel="stylesheet" href="assets/css/style.css?v=20261102a" />
 </head>
 <body>
 
@@ -37,6 +37,7 @@
     <nav class="nav" id="main-nav" aria-label="Navigasi utama">
       <a href="#home">Home</a>
       <a href="#slots">Slot</a>
+      <a href="#process">Waktu</a>
       <a href="#clip">Clip</a>
       <a href="#shorts">Shorts</a>
       <a href="#vod">VOD</a>
@@ -125,6 +126,40 @@
     </div>
   </section>
 
+  <!-- PROCESSING TIME -->
+  <section id="process" class="section section-process">
+    <div class="process-board reveal">
+      <div class="process-copy">
+        <span class="section-kicker">Info — Waktu Pengerjaan</span>
+        <h2 class="process-title">Estimasi 1–3 Hari</h2>
+        <p class="process-note">Berlaku untuk Shorts, Clip, VOD, dan request editing lainnya.</p>
+      </div>
+      <div class="process-list">
+        <div class="process-item">
+          <span class="process-index">01</span>
+          <div>
+            <strong>1–3 hari</strong>
+            <small>Waktu pengerjaan normal untuk Shorts, Clip, dan VOD.</small>
+          </div>
+        </div>
+        <div class="process-item">
+          <span class="process-index">02</span>
+          <div>
+            <strong>Durasi lebih panjang</strong>
+            <small>Waktu pengerjaan bisa bertambah mengikuti panjang clip.</small>
+          </div>
+        </div>
+        <div class="process-item">
+          <span class="process-index">03</span>
+          <div>
+            <strong>Demand editing baru</strong>
+            <small>Kalau tekniknya belum dikuasai, butuh waktu tambahan untuk mempelajarinya.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- CLIP -->
   <section id="clip" class="section">
     <div class="section-head reveal">
@@ -136,7 +171,7 @@
       <article class="card card-gold card-center reveal">
         <div class="card-top">
           <h3>Katsui Clip</h3>
-          <span class="badge badge-gold" data-slot-badge>Open</span>
+          <span class="badge badge-gold" data-service-badge="clip">Open</span>
         </div>
         <p class="price">Rp60.000 <small>/ menit</small></p>
         <div class="includes-block">
@@ -149,7 +184,7 @@
           </ul>
         </div>
         <p class="note">+Rp15.000 / revisi tambahan</p>
-        <a class="btn btn-royal" href="#contact">Order Clip</a>
+        <a class="btn btn-royal" href="#contact" data-service-order="clip">Order Clip</a>
       </article>
       <article class="card reveal">
         <h3>Cara Order</h3>
@@ -176,7 +211,7 @@
       <article class="card card-rose card-center reveal">
         <div class="card-top">
           <h3>Shorts Reguler</h3>
-          <span class="badge" data-slot-badge>Open</span>
+          <span class="badge" data-service-badge="shorts">Open</span>
         </div>
         <p class="price">Rp50.000 <small>/ video · 1 menit</small></p>
         <div class="includes-block">
@@ -189,13 +224,13 @@
           </ul>
         </div>
         <p class="note">+Rp15.000 / revisi tambahan</p>
-        <a class="btn btn-primary" href="#contact">Order Shorts</a>
+        <a class="btn btn-primary" href="#contact" data-service-order="shorts">Order Shorts</a>
       </article>
 
       <article class="card card-gold card-center reveal">
         <div class="card-top">
           <h3>Paket 5 Shorts</h3>
-          <span class="badge badge-gold">Hemat</span>
+          <span class="badge badge-gold" data-service-badge="shorts">Open</span>
         </div>
         <p class="price">Rp240.000 <small>/ 5 video</small></p>
         <div class="includes-block">
@@ -208,7 +243,7 @@
           </ul>
         </div>
         <p class="note">Hemat Rp10.000 dari harga satuan</p>
-        <a class="btn btn-royal" href="#contact">Order Paket</a>
+        <a class="btn btn-royal" href="#contact" data-service-order="shorts">Order Paket</a>
       </article>
     </div>
 
@@ -251,7 +286,7 @@
       <article class="card card-rose card-center reveal">
         <div class="card-top">
           <h3>VOD Clip Lite</h3>
-          <span class="badge" data-slot-badge>Open</span>
+          <span class="badge" data-service-badge="vod">Open</span>
         </div>
         <p class="price">Rp60.000 <small>/ menit</small></p>
         <div class="includes-block">
@@ -264,7 +299,7 @@
           </ul>
         </div>
         <p class="note">+Rp15.000 / revisi tambahan</p>
-        <a class="btn btn-primary" href="#contact">Order VOD</a>
+        <a class="btn btn-primary" href="#contact" data-service-order="vod">Order VOD</a>
       </article>
       <article class="card reveal">
         <h3>Cara Order VOD</h3>
@@ -367,8 +402,8 @@
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" defer></script>
-<script src="assets/js/supabase-config.js?v=20261101a" defer></script>
-<script src="assets/js/main.js?v=20261101a" defer></script>
+<script src="assets/js/supabase-config.js?v=20261102a" defer></script>
+<script src="assets/js/main.js?v=20261102a" defer></script>
 <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>

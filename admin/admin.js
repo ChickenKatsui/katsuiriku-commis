@@ -20,6 +20,13 @@
   let siteData = null;
   let leaderboardRows = [];
   let routing = false;
+  let serviceReady = false;
+
+  const SERVICE_FIELDS = [
+    { key: "clip_open", input: "clip-open" },
+    { key: "shorts_open", input: "shorts-open" },
+    { key: "vod_open", input: "vod-open" }
+  ];
 
   function setStatus(id, message, type){
     const el = $(id);
@@ -51,6 +58,12 @@
     const parsed = Number.parseInt(value, 10);
     if(!Number.isFinite(parsed)) return fallback;
     return Math.max(min, Math.min(max, parsed));
+  }
+
+  function normalizeOpen(value){
+    if(value === false || value === 0) return false;
+    if(typeof value === "string" && /^(false|0|closed)$/i.test(value.trim())) return false;
+    return true;
   }
 
   function normalizeEntries(raw){
@@ -95,6 +108,35 @@
     if(filled) filled.value = clampInt(data.slot_filled, 0, 999, 0);
     if(note) note.value = String(data.slot_note || "").slice(0, 240);
     updateSlotPreview();
+  }
+
+  function syncServiceSwitchLabels(){
+    SERVICE_FIELDS.forEach(({ input }) => {
+      const el = $(input);
+      const label = document.querySelector(`[data-switch-label="${input}"]`);
+      if(!el || !label) return;
+      label.textContent = el.checked ? "Open" : "Closed";
+      label.classList.toggle("is-open", el.checked);
+      label.classList.toggle("is-closed", !el.checked);
+    });
+  }
+
+  function fillServiceForm(data){
+    SERVICE_FIELDS.forEach(({ key, input }) => {
+      const el = $(input);
+      if(el) el.checked = normalizeOpen(data[key]);
+    });
+    syncServiceSwitchLabels();
+  }
+
+  function setServiceEnabled(enabled){
+    serviceReady = Boolean(enabled);
+    const save = $("service-save");
+    if(save) save.disabled = !serviceReady;
+    SERVICE_FIELDS.forEach(({ input }) => {
+      const el = $(input);
+      if(el) el.disabled = !serviceReady;
+    });
   }
 
   function fillLeaderboardForm(data){
@@ -157,20 +199,39 @@
       .maybeSingle();
 
     if(error){
+      setServiceEnabled(false);
       setStatus("slot-status", "Gagal memuat data: " + error.message, "err");
+      setStatus("service-status", "Gagal memuat data: " + error.message, "err");
       setStatus("leaderboard-status", "Gagal memuat data: " + error.message, "err");
       return;
     }
     if(!data){
       const message = "Baris site_data (id=1) belum ada. Jalankan SQL setup terlebih dahulu.";
+      setServiceEnabled(false);
       setStatus("slot-status", message, "err");
+      setStatus("service-status", message, "err");
       setStatus("leaderboard-status", message, "err");
       return;
     }
 
     siteData = data;
     fillSlotForm(data);
+    fillServiceForm(data);
     fillLeaderboardForm(data);
+
+    const missingServiceColumns = SERVICE_FIELDS
+      .map(field => field.key)
+      .filter(key => !(key in data));
+    const setupHint = $("service-setup-hint");
+    const servicesAvailable = missingServiceColumns.length === 0;
+    setServiceEnabled(servicesAvailable);
+    if(setupHint) setupHint.hidden = servicesAvailable;
+
+    if(!servicesAvailable){
+      setStatus("service-status", "Fitur status layanan belum aktif. Jalankan SQL migrasi, lalu refresh.", "err");
+    }else{
+      setStatus("service-status", "", "");
+    }
   }
 
   async function handleSession(session){
@@ -334,6 +395,52 @@
       });
     }
 
+    SERVICE_FIELDS.forEach(({ input }) => {
+      const el = $(input);
+      if(el) el.addEventListener("change", syncServiceSwitchLabels);
+    });
+
+    const serviceForm = $("service-form");
+    if(serviceForm){
+      serviceForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if(!client || !currentUser || !serviceReady) return;
+
+        const values = {};
+        SERVICE_FIELDS.forEach(({ key, input }) => {
+          values[key] = Boolean($(input) && $(input).checked);
+        });
+
+        const btn = $("service-save");
+        if(btn){ btn.disabled = true; btn.textContent = "Menyimpan..."; }
+        setStatus("service-status", "Menyimpan ke Supabase...", "");
+
+        try{
+          const { error } = await client
+            .from("site_data")
+            .update({
+              ...values,
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", 1);
+
+          if(error) throw error;
+
+          siteData = { ...(siteData || {}), ...values };
+          setStatus("service-status", "Tersimpan. Status layanan website langsung update.", "ok");
+        }catch(err){
+          const message = String(err.message || "");
+          if(/column|schema cache|does not exist/i.test(message)){
+            setStatus("service-status", "Gagal menyimpan: kolom status layanan belum ada. Jalankan SQL migrasi di SUPABASE_SETUP.md.", "err");
+          }else{
+            setStatus("service-status", "Gagal menyimpan: " + (message || "coba lagi."), "err");
+          }
+        }finally{
+          if(btn){ btn.disabled = !serviceReady; btn.textContent = "Simpan status"; }
+        }
+      });
+    }
+
     const leaderboardForm = $("leaderboard-form");
     if(leaderboardForm){
       leaderboardForm.addEventListener("submit", async (event) => {
@@ -438,6 +545,7 @@
     }
 
     bindUI();
+    setServiceEnabled(false);
     show("login-screen");
 
     client.auth.getSession().then(({ data, error }) => {
