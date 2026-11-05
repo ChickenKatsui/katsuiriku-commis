@@ -23,6 +23,8 @@ Website commission statis (HTML/CSS/JS) dengan nuansa blush rose, cream, cocoa, 
 - Katsui Clip: **Rp60.000 / menit** — kartu gradient royal gold
 - VOD Clip Lite: **Rp60.000 / menit** — kartu soft rose, format **16:9**
 - Shorts: Shorts Reguler **Rp50.000 / video (1 menit)**, Paket 5 Shorts **Rp240.000**, durasi lebih panjang Rp100.000 / Rp150.000
+- Global / overseas: Shorts **$15 / video**, 5-Short Bundle **$65**, Katsui Clip & VOD Clip Lite **$25 / menit**, extra revision **$5**; payment PayPal/Wise
+- Rate global diposisikan low-mid market VGen (shorts $10–$35, bundle 5 $65–$90, clip/VOD $30–$50) supaya tetap kompetitif untuk client luar
 - Info slot commish: angka slot tampil di hero dan section khusus; badge kartu menampilkan status layanan (Open/Closed/Full)
 - Waktu pengerjaan: **1–3 hari** untuk Shorts, Clip, VOD, dan request editing lainnya; bisa lebih lama untuk durasi panjang atau demand editing baru
 - Status layanan: Katsui Clip, Shorts, dan VOD bisa diatur **Open / Closed** dari admin
@@ -44,7 +46,7 @@ Buka `assets/js/main.js`:
 
 Link/tombol langsung ada di `index.html`.
 
-Setelah mengubah `assets/css/style.css`, `assets/js/main.js`, `admin/admin.css`, atau `admin/admin.js`, ganti angka `?v=...` di `index.html` dan `admin/index.html` agar browser/CDN tidak memakai cache lama. Versi saat ini: **20261102a**. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
+Setelah mengubah `assets/css/style.css`, `assets/js/main.js`, `admin/admin.css`, atau `admin/admin.js`, ganti angka `?v=...` di `index.html` dan `admin/index.html` agar browser/CDN tidak memakai cache lama. Versi saat ini: **20261105a**. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
 
 ## Admin panel & data live
 
