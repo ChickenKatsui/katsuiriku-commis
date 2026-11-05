@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fredoka:wght@400;500;600;700&family=Manrope:wght@500;700;800&family=Ubuntu:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=20261105a" />
+<link rel="stylesheet" href="assets/css/style.css?v=20261105b" />
 </head>
 <body>
 
@@ -169,23 +169,23 @@
       <p class="section-sub">Clip untuk diupload ke channel KatsuiRiku.</p>
     </div>
     <div class="grid grid-2">
-      <article class="card card-gold card-center reveal">
+      <article class="card card-gold card-center reveal" data-local-card="clip">
         <div class="card-top">
-          <h3>Katsui Clip</h3>
+          <h3 data-price-title>Katsui Clip</h3>
           <span class="badge badge-gold" data-service-badge="clip">Open</span>
         </div>
-        <p class="price">Rp60.000 <small>/ menit</small></p>
-        <div class="includes-block">
+        <p class="price"><span data-price-value>Rp60.000</span> <small data-price-unit>/ menit</small></p>
+        <div class="includes-block" data-price-includes-block>
           <span class="includes-label">Termasuk</span>
-          <ul class="includes-list">
+          <ul class="includes-list" data-price-includes>
             <li>Thumbnail</li>
             <li>Judul</li>
             <li>2x Revisi</li>
             <li>File final</li>
           </ul>
         </div>
-        <p class="note">+Rp15.000 / revisi tambahan</p>
-        <a class="btn btn-royal" href="#contact" data-service-order="clip">Order Clip</a>
+        <p class="note" data-price-note>+Rp15.000 / revisi tambahan</p>
+        <a class="btn btn-royal" href="#contact" data-service-order="clip" data-price-cta>Order Clip</a>
       </article>
       <article class="card reveal">
         <h3>Cara Order</h3>
@@ -209,42 +209,42 @@
     </div>
 
     <div class="grid grid-2">
-      <article class="card card-rose card-center reveal">
+      <article class="card card-rose card-center reveal" data-local-card="shorts">
         <div class="card-top">
-          <h3>Shorts Reguler</h3>
+          <h3 data-price-title>Shorts Reguler</h3>
           <span class="badge" data-service-badge="shorts">Open</span>
         </div>
-        <p class="price">Rp50.000 <small>/ video · 1 menit</small></p>
-        <div class="includes-block">
+        <p class="price"><span data-price-value>Rp50.000</span> <small data-price-unit>/ video · 1 menit</small></p>
+        <div class="includes-block" data-price-includes-block>
           <span class="includes-label">Termasuk</span>
-          <ul class="includes-list">
+          <ul class="includes-list" data-price-includes>
             <li>Durasi 1 menit</li>
             <li>2x Revisi</li>
             <li>File final</li>
             <li>Siap upload</li>
           </ul>
         </div>
-        <p class="note">+Rp15.000 / revisi tambahan</p>
-        <a class="btn btn-primary" href="#contact" data-service-order="shorts">Order Shorts</a>
+        <p class="note" data-price-note>+Rp15.000 / revisi tambahan</p>
+        <a class="btn btn-primary" href="#contact" data-service-order="shorts" data-price-cta>Order Shorts</a>
       </article>
 
-      <article class="card card-gold card-center reveal">
+      <article class="card card-gold card-center reveal" data-local-card="bundle">
         <div class="card-top">
-          <h3>Paket 5 Shorts</h3>
+          <h3 data-price-title>Paket 5 Shorts</h3>
           <span class="badge badge-gold" data-service-badge="shorts">Open</span>
         </div>
-        <p class="price">Rp240.000 <small>/ 5 video</small></p>
-        <div class="includes-block">
+        <p class="price"><span data-price-value>Rp240.000</span> <small data-price-unit>/ 5 video</small></p>
+        <div class="includes-block" data-price-includes-block>
           <span class="includes-label">Termasuk</span>
-          <ul class="includes-list">
+          <ul class="includes-list" data-price-includes>
             <li>5 video short</li>
             <li>Durasi 1 menit / video</li>
             <li>2x Revisi</li>
             <li>File final</li>
           </ul>
         </div>
-        <p class="note">Hemat Rp10.000 dari harga satuan</p>
-        <a class="btn btn-royal" href="#contact" data-service-order="shorts">Order Paket</a>
+        <p class="note" data-price-note>Hemat Rp10.000 dari harga satuan</p>
+        <a class="btn btn-royal" href="#contact" data-service-order="shorts" data-price-cta>Order Paket</a>
       </article>
     </div>
 
@@ -253,15 +253,15 @@
       <div class="table-wrap">
         <table>
           <thead><tr><th>Durasi</th><th>Harga</th></tr></thead>
-          <tbody>
+          <tbody id="local-duration-rows">
             <tr><td>0:00 – 1:05</td><td class="price-col">Rp50.000</td></tr>
             <tr><td>1:05 – 2:05</td><td class="price-col">Rp100.000</td></tr>
             <tr><td>2:06 – 2:59</td><td class="price-col">Rp150.000</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="includes"><span class="badge">Termasuk 2x Revisi</span> +Rp15.000 / revisi tambahan</p>
-      <p class="note">Untuk durasi lebih panjang, harga menyesuaikan tabel. Paket 5 Shorts berlaku untuk 5 video durasi 1 menit. Bisa berikan referensi editing. Sediakan assets (BG, BGM, PNG) jika perlu. Mau harga lebih murah? Request Low Effort Editing jika slot tersedia.</p>
+      <p class="includes"><span class="badge" id="local-duration-badge">Termasuk 2x Revisi</span> <span id="local-duration-extra">+Rp15.000 / revisi tambahan</span></p>
+      <p class="note" id="local-duration-note">Untuk durasi lebih panjang, harga menyesuaikan tabel. Paket 5 Shorts berlaku untuk 5 video durasi 1 menit. Bisa berikan referensi editing. Sediakan assets (BG, BGM, PNG) jika perlu. Mau harga lebih murah? Request Low Effort Editing jika slot tersedia.</p>
     </div>
 
     <div class="card reveal">
@@ -284,23 +284,23 @@
       <p class="section-sub">VOD Clip untuk diupload ke sosial media kamu.</p>
     </div>
     <div class="grid grid-2">
-      <article class="card card-rose card-center reveal">
+      <article class="card card-rose card-center reveal" data-local-card="vod">
         <div class="card-top">
-          <h3>VOD Clip Lite</h3>
+          <h3 data-price-title>VOD Clip Lite</h3>
           <span class="badge" data-service-badge="vod">Open</span>
         </div>
-        <p class="price">Rp60.000 <small>/ menit</small></p>
-        <div class="includes-block">
+        <p class="price"><span data-price-value>Rp60.000</span> <small data-price-unit>/ menit</small></p>
+        <div class="includes-block" data-price-includes-block>
           <span class="includes-label">Termasuk</span>
-          <ul class="includes-list">
+          <ul class="includes-list" data-price-includes>
             <li>2x Revisi</li>
             <li>Format 16:9</li>
             <li>File final</li>
             <li>Siap upload</li>
           </ul>
         </div>
-        <p class="note">+Rp15.000 / revisi tambahan</p>
-        <a class="btn btn-primary" href="#contact" data-service-order="vod">Order VOD</a>
+        <p class="note" data-price-note>+Rp15.000 / revisi tambahan</p>
+        <a class="btn btn-primary" href="#contact" data-service-order="vod" data-price-cta>Order VOD</a>
       </article>
       <article class="card reveal">
         <h3>Cara Order VOD</h3>
@@ -325,44 +325,44 @@
 
     <div class="global-board reveal">
       <div class="global-intro">
-        <span class="global-badge">USD · Worldwide</span>
-        <h3>Clip &amp; Shorts untuk Creator Luar</h3>
-        <p>Rate internasional yang ramah untuk creator luar, dengan output rapi, caption, dan revisi yang jelas. Cocok untuk VTuber, streamer, dan creator yang butuh clip konsisten.</p>
-        <ul class="global-points">
+        <span class="global-badge" id="global-intro-badge">USD · Worldwide</span>
+        <h3 id="global-intro-title">Clip &amp; Shorts untuk Creator Luar</h3>
+        <p id="global-intro-text">Rate internasional yang ramah untuk creator luar, dengan output rapi, caption, dan revisi yang jelas. Cocok untuk VTuber, streamer, dan creator yang butuh clip konsisten.</p>
+        <ul class="global-points" id="global-intro-points">
           <li>Caption / subtitle</li>
           <li>2x revisi</li>
           <li>File final siap upload</li>
           <li>Turnaround 1–3 hari</li>
         </ul>
-        <a class="btn btn-slot" href="#contact">Tanya Global Rate</a>
+        <a class="btn btn-slot" href="#contact" id="global-intro-cta">Tanya Global Rate</a>
       </div>
 
       <div class="global-prices" aria-label="Harga internasional">
-        <article class="global-price-card">
-          <span class="global-label">Shorts / Reels / TikTok</span>
-          <p class="global-price">$15 <small>/ video</small></p>
-          <p class="global-meta">Base rate · up to 1 minute · caption · 2x revision</p>
+        <article class="global-price-card" data-global-card="shorts">
+          <span class="global-label" data-global-label>Shorts / Reels / TikTok</span>
+          <p class="global-price"><span data-global-value>$15</span> <small data-global-unit>/ video</small></p>
+          <p class="global-meta" data-global-meta>Base rate · up to 1 minute · caption · 2x revision</p>
         </article>
-        <article class="global-price-card global-price-card--gold">
-          <span class="global-label">5-Short Bundle</span>
-          <p class="global-price">$65 <small>/ 5 videos</small></p>
-          <p class="global-meta">Save $10 · up to 1 min each</p>
+        <article class="global-price-card global-price-card--gold" data-global-card="bundle">
+          <span class="global-label" data-global-label>5-Short Bundle</span>
+          <p class="global-price"><span data-global-value>$65</span> <small data-global-unit>/ 5 videos</small></p>
+          <p class="global-meta" data-global-meta>Save $10 · up to 1 min each</p>
         </article>
-        <article class="global-price-card">
-          <span class="global-label">Katsui Clip</span>
-          <p class="global-price">$25 <small>/ minute</small></p>
-          <p class="global-meta">Base rate · 16:9 · thumbnail · title · 2x revision</p>
+        <article class="global-price-card" data-global-card="clip">
+          <span class="global-label" data-global-label>Katsui Clip</span>
+          <p class="global-price"><span data-global-value>$25</span> <small data-global-unit>/ minute</small></p>
+          <p class="global-meta" data-global-meta>Base rate · 16:9 · thumbnail · title · 2x revision</p>
         </article>
-        <article class="global-price-card global-price-card--soft">
-          <span class="global-label">VOD Clip Lite</span>
-          <p class="global-price">$25 <small>/ minute</small></p>
-          <p class="global-meta">Base rate · 16:9 · final file · 2x revision</p>
+        <article class="global-price-card global-price-card--soft" data-global-card="vod">
+          <span class="global-label" data-global-label>VOD Clip Lite</span>
+          <p class="global-price"><span data-global-value>$25</span> <small data-global-unit>/ minute</small></p>
+          <p class="global-meta" data-global-meta>Base rate · 16:9 · final file · 2x revision</p>
         </article>
       </div>
     </div>
 
-    <div class="global-note reveal">
-      <p><strong>Extra revision:</strong> +$5 setelah 2x revisi gratis. <strong>Payment:</strong> PayPal / Wise, biaya transfer ditanggung client. Durasi panjang, VOD scrubbing, atau edit kompleks bisa menyesuaikan quote.</p>
+    <div class="global-note reveal" id="global-note">
+      <p id="global-note-text"><strong>Extra revision:</strong> +$5 setelah 2x revisi gratis. <strong>Payment:</strong> PayPal / Wise, biaya transfer ditanggung client. Durasi panjang, VOD scrubbing, atau edit kompleks bisa menyesuaikan quote.</p>
     </div>
   </section>
 
@@ -454,8 +454,9 @@
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" defer></script>
-<script src="assets/js/supabase-config.js?v=20261105a" defer></script>
-<script src="assets/js/main.js?v=20261105a" defer></script>
+<script src="assets/js/supabase-config.js?v=20261105b" defer></script>
+<script src="assets/js/pricing-defaults.js?v=20261105b" defer></script>
+<script src="assets/js/main.js?v=20261105b" defer></script>
 <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>

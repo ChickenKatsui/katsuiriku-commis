@@ -30,6 +30,8 @@ const PORTFOLIO_PLAYLIST = "https://youtube.com/playlist?list=PLNJ5KH9O1soM&si=l
    Data live — Supabase (public read) + fallback JSON
    Admin hanya bisa menulis lewat /admin/ dan RLS Supabase.
    ============================================================ */
+const PRICING_API = window.KATSUI_PRICING || null;
+
 const SITE_DATA_DEFAULT = {
   slot_total: 5,
   slot_filled: 0,
@@ -37,6 +39,8 @@ const SITE_DATA_DEFAULT = {
   clip_open: true,
   shorts_open: true,
   vod_open: true,
+  local_pricing: {},
+  global_pricing: {},
   leaderboard_title: "Top Commish",
   leaderboard_period: "Bulan Ini",
   leaderboard: [],
@@ -170,6 +174,12 @@ function normalizeSiteData(raw){
     clip_open: normalizeOpen(source.clip_open ?? source.clipOpen),
     shorts_open: normalizeOpen(source.shorts_open ?? source.shortsOpen),
     vod_open: normalizeOpen(source.vod_open ?? source.vodOpen),
+    local_pricing: PRICING_API
+      ? PRICING_API.normalizeLocal(source.local_pricing ?? source.localPricing)
+      : null,
+    global_pricing: PRICING_API
+      ? PRICING_API.normalizeGlobal(source.global_pricing ?? source.globalPricing)
+      : null,
     leaderboard_title: String(source.leaderboard_title || "Top Commish").slice(0, 80),
     leaderboard_period: String(source.leaderboard_period || "Bulan Ini").slice(0, 60),
     leaderboard: normalizeLeaderboard(source.leaderboard ?? source.entries),
@@ -304,6 +314,153 @@ function renderServices(state = siteData){
   });
 }
 
+function renderTextList(el, items){
+  if(!el) return;
+  const fragment = document.createDocumentFragment();
+  (items || []).forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    fragment.appendChild(li);
+  });
+  el.replaceChildren(fragment);
+}
+
+function renderLocalCard(key, data){
+  const card = document.querySelector(`[data-local-card="${key}"]`);
+  if(!card || !data) return;
+
+  const title = card.querySelector("[data-price-title]");
+  const price = card.querySelector("[data-price-value]");
+  const unit = card.querySelector("[data-price-unit]");
+  const includes = card.querySelector("[data-price-includes]");
+  const includesBlock = card.querySelector("[data-price-includes-block]");
+  const note = card.querySelector("[data-price-note]");
+  const cta = card.querySelector("[data-price-cta]");
+
+  if(title) title.textContent = data.title;
+  if(price) price.textContent = data.price;
+  if(unit) unit.textContent = data.unit;
+  renderTextList(includes, data.includes);
+  if(includesBlock) includesBlock.hidden = !data.includes.length;
+  if(note){
+    note.textContent = data.note;
+    note.hidden = !data.note;
+  }
+  if(cta){
+    cta.textContent = data.cta;
+    cta.dataset.defaultLabel = data.cta;
+  }
+}
+
+function renderLocalDuration(data){
+  if(!data) return;
+  const rows = document.getElementById("local-duration-rows");
+  if(rows){
+    const fragment = document.createDocumentFragment();
+    data.rows.forEach(row => {
+      const tr = document.createElement("tr");
+      const duration = document.createElement("td");
+      const price = document.createElement("td");
+      duration.textContent = row.duration;
+      price.className = "price-col";
+      price.textContent = row.price;
+      tr.append(duration, price);
+      fragment.appendChild(tr);
+    });
+    rows.replaceChildren(fragment);
+  }
+
+  const badge = document.getElementById("local-duration-badge");
+  const extra = document.getElementById("local-duration-extra");
+  const note = document.getElementById("local-duration-note");
+  if(badge){
+    badge.textContent = data.badge;
+    badge.hidden = !data.badge;
+  }
+  if(extra){
+    extra.textContent = data.extra;
+    extra.hidden = !data.extra;
+  }
+  if(note){
+    note.textContent = data.note;
+    note.hidden = !data.note;
+  }
+}
+
+function renderGlobalCard(key, data){
+  const card = document.querySelector(`[data-global-card="${key}"]`);
+  if(!card || !data) return;
+
+  const label = card.querySelector("[data-global-label]");
+  const price = card.querySelector("[data-global-value]");
+  const unit = card.querySelector("[data-global-unit]");
+  const meta = card.querySelector("[data-global-meta]");
+
+  if(label) label.textContent = data.label;
+  if(price) price.textContent = data.price;
+  if(unit) unit.textContent = data.unit;
+  if(meta){
+    meta.textContent = data.meta;
+    meta.hidden = !data.meta;
+  }
+}
+
+function renderGlobalNote(data){
+  const note = document.getElementById("global-note");
+  const text = document.getElementById("global-note-text");
+  if(!note || !text || !data) return;
+
+  const parts = [
+    ["Extra revision:", data.extra_revision],
+    ["Payment:", data.payment],
+    ["", data.quote]
+  ];
+  const fragment = document.createDocumentFragment();
+
+  parts.forEach(([label, value]) => {
+    if(!value) return;
+    if(label){
+      const strong = document.createElement("strong");
+      strong.textContent = label;
+      fragment.appendChild(strong);
+      fragment.appendChild(document.createTextNode(" "));
+    }
+    fragment.appendChild(document.createTextNode(value));
+    fragment.appendChild(document.createTextNode(" "));
+  });
+
+  text.replaceChildren(fragment);
+  note.hidden = !text.textContent.trim();
+}
+
+function renderPricing(state = siteData){
+  const local = state.local_pricing;
+  const global = state.global_pricing;
+  if(!local || !global) return;
+
+  ["clip", "shorts", "bundle", "vod"].forEach(key => renderLocalCard(key, local[key]));
+  renderLocalDuration(local.duration);
+
+  const badge = document.getElementById("global-intro-badge");
+  const title = document.getElementById("global-intro-title");
+  const text = document.getElementById("global-intro-text");
+  const points = document.getElementById("global-intro-points");
+  const cta = document.getElementById("global-intro-cta");
+  const intro = global.intro || {};
+
+  if(badge){
+    badge.textContent = intro.badge;
+    badge.hidden = !intro.badge;
+  }
+  if(title) title.textContent = intro.title;
+  if(text) text.textContent = intro.text;
+  renderTextList(points, intro.points);
+  if(cta) cta.textContent = intro.cta;
+
+  ["shorts", "bundle", "clip", "vod"].forEach(key => renderGlobalCard(key, global[key]));
+  renderGlobalNote(global.note);
+}
+
 function renderLeaderboard(){
   const kicker = document.getElementById("leaderboard-kicker");
   const title = document.getElementById("leaderboard-title");
@@ -358,6 +515,7 @@ function renderLeaderboard(){
 }
 
 function renderSite(){
+  renderPricing();
   renderSlots();
   renderServices();
   renderLeaderboard();

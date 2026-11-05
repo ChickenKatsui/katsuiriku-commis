@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fredoka:wght@400;500;600;700&family=Manrope:wght@500;700;800&family=Ubuntu:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261105a" />
-<link rel="stylesheet" href="admin.css?v=20261105a" />
+<link rel="stylesheet" href="../assets/css/style.css?v=20261105b" />
+<link rel="stylesheet" href="admin.css?v=20261105b" />
 </head>
 <body class="admin-body">
 
@@ -41,7 +41,7 @@
     <p class="admin-hint">Panel admin dan data live memakai Supabase. Situs publik tetap jalan dengan data cadangan selama setup belum selesai.</p>
     <ol class="admin-steps">
       <li>Buat project gratis di <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">Supabase</a>.</li>
-      <li>Jalankan SQL setup dari panduan di repo (tabel, RLS, realtime). Jika database sudah ada, jalankan juga migrasi status layanan.</li>
+      <li>Jalankan SQL setup dari panduan di repo (tabel, RLS, realtime). Jika database sudah ada, jalankan juga migrasi status layanan dan migrasi harga.</li>
       <li>Buat user admin di <strong>Authentication → Users</strong>, lalu masukkan UUID-nya ke tabel <code>admin_users</code>.</li>
       <li>Salin <strong>Project URL</strong> dan <strong>anon public key</strong> ke <code>assets/js/supabase-config.js</code>.</li>
       <li>Refresh halaman ini, lalu login.</li>
@@ -85,7 +85,8 @@
 
     <div class="admin-tabs" role="tablist" aria-label="Menu admin">
       <button class="admin-tab active" type="button" data-tab="slots" role="tab" aria-selected="true">Slot Commish</button>
-      <button class="admin-tab" type="button" data-tab="services" role="tab" aria-selected="false">Status Layanan</button>
+      <button class="admin-tab" type="button" data-tab="pricing" role="tab" aria-selected="false">Harga</button>
+      <button class="admin-tab" type="button" data-tab="services" role="tab" aria-selected="false">Layanan</button>
       <button class="admin-tab" type="button" data-tab="leaderboard" role="tab" aria-selected="false">Top Commish</button>
     </div>
 
@@ -117,6 +118,308 @@
         </div>
         <p class="admin-status" id="slot-status" role="status"></p>
       </form>
+    </section>
+
+    <!-- PRICING -->
+    <section class="admin-card admin-panel" id="tab-pricing" role="tabpanel" hidden>
+      <div class="admin-section-head">
+        <div>
+          <span class="section-kicker">Harga &amp; detail panel</span>
+          <h2>Harga Commission</h2>
+        </div>
+        <span class="admin-live">IDR / USD</span>
+      </div>
+      <p class="admin-hint">Harga Indonesia dan Global dipisah. Edit harga, satuan, isi kartu, dan catatan di masing-masing panel lalu simpan.</p>
+      <p class="admin-hint admin-hint-sm" id="pricing-setup-hint" hidden>Kolom harga belum ada di Supabase. Jalankan SQL migrasi di <a href="https://github.com/ChickenKatsui/katsuiriku-commis/blob/main/SUPABASE_SETUP.md" target="_blank" rel="noopener">SUPABASE_SETUP.md</a>, lalu refresh halaman ini.</p>
+
+      <div class="admin-price-switch" role="tablist" aria-label="Wilayah harga">
+        <button class="admin-price-tab active" type="button" data-price-region="local" role="tab" aria-selected="true">Indonesia · IDR</button>
+        <button class="admin-price-tab" type="button" data-price-region="global" role="tab" aria-selected="false">Global · USD</button>
+      </div>
+
+      <!-- LOCAL PRICING -->
+      <div class="admin-price-region" id="pricing-local">
+        <form id="local-pricing-form" class="admin-form">
+          <div class="admin-price-stack">
+            <details class="admin-price-block" open>
+              <summary><span>Katsui Clip</span><small>Kartu harga utama</small></summary>
+              <div class="admin-price-fields">
+                <div class="admin-grid-2">
+                  <label class="admin-field">Judul kartu
+                    <input id="local-clip-title" type="text" maxlength="80" />
+                  </label>
+                  <label class="admin-field">Harga
+                    <input id="local-clip-price" type="text" maxlength="40" placeholder="Rp60.000" />
+                  </label>
+                </div>
+                <div class="admin-grid-2">
+                  <label class="admin-field">Satuan
+                    <input id="local-clip-unit" type="text" maxlength="60" placeholder="/ menit" />
+                  </label>
+                  <label class="admin-field">Label tombol order
+                    <input id="local-clip-cta" type="text" maxlength="40" placeholder="Order Clip" />
+                  </label>
+                </div>
+                <label class="admin-field">Termasuk (satu per baris)
+                  <textarea id="local-clip-includes" rows="4" maxlength="800" placeholder="Thumbnail&#10;Judul&#10;2x Revisi&#10;File final"></textarea>
+                </label>
+                <label class="admin-field">Catatan tambahan
+                  <input id="local-clip-note" type="text" maxlength="240" placeholder="+Rp15.000 / revisi tambahan" />
+                </label>
+              </div>
+            </details>
+
+            <details class="admin-price-block">
+              <summary><span>Shorts Reguler</span><small>Kartu harga short</small></summary>
+              <div class="admin-price-fields">
+                <div class="admin-grid-2">
+                  <label class="admin-field">Judul kartu
+                    <input id="local-shorts-title" type="text" maxlength="80" />
+                  </label>
+                  <label class="admin-field">Harga
+                    <input id="local-shorts-price" type="text" maxlength="40" placeholder="Rp50.000" />
+                  </label>
+                </div>
+                <div class="admin-grid-2">
+                  <label class="admin-field">Satuan
+                    <input id="local-shorts-unit" type="text" maxlength="60" placeholder="/ video · 1 menit" />
+                  </label>
+                  <label class="admin-field">Label tombol order
+                    <input id="local-shorts-cta" type="text" maxlength="40" placeholder="Order Shorts" />
+                  </label>
+                </div>
+                <label class="admin-field">Termasuk (satu per baris)
+                  <textarea id="local-shorts-includes" rows="4" maxlength="800"></textarea>
+                </label>
+                <label class="admin-field">Catatan tambahan
+                  <input id="local-shorts-note" type="text" maxlength="240" />
+                </label>
+              </div>
+            </details>
+
+            <details class="admin-price-block">
+              <summary><span>Paket 5 Shorts</span><small>Kartu bundle</small></summary>
+              <div class="admin-price-fields">
+                <div class="admin-grid-2">
+                  <label class="admin-field">Judul kartu
+                    <input id="local-bundle-title" type="text" maxlength="80" />
+                  </label>
+                  <label class="admin-field">Harga
+                    <input id="local-bundle-price" type="text" maxlength="40" placeholder="Rp240.000" />
+                  </label>
+                </div>
+                <div class="admin-grid-2">
+                  <label class="admin-field">Satuan
+                    <input id="local-bundle-unit" type="text" maxlength="60" placeholder="/ 5 video" />
+                  </label>
+                  <label class="admin-field">Label tombol order
+                    <input id="local-bundle-cta" type="text" maxlength="40" placeholder="Order Paket" />
+                  </label>
+                </div>
+                <label class="admin-field">Termasuk (satu per baris)
+                  <textarea id="local-bundle-includes" rows="4" maxlength="800"></textarea>
+                </label>
+                <label class="admin-field">Catatan tambahan
+                  <input id="local-bundle-note" type="text" maxlength="240" />
+                </label>
+              </div>
+            </details>
+
+            <details class="admin-price-block">
+              <summary><span>VOD Clip Lite</span><small>Kartu harga VOD</small></summary>
+              <div class="admin-price-fields">
+                <div class="admin-grid-2">
+                  <label class="admin-field">Judul kartu
+                    <input id="local-vod-title" type="text" maxlength="80" />
+                  </label>
+                  <label class="admin-field">Harga
+                    <input id="local-vod-price" type="text" maxlength="40" placeholder="Rp60.000" />
+                  </label>
+                </div>
+                <div class="admin-grid-2">
+                  <label class="admin-field">Satuan
+                    <input id="local-vod-unit" type="text" maxlength="60" placeholder="/ menit" />
+                  </label>
+                  <label class="admin-field">Label tombol order
+                    <input id="local-vod-cta" type="text" maxlength="40" placeholder="Order VOD" />
+                  </label>
+                </div>
+                <label class="admin-field">Termasuk (satu per baris)
+                  <textarea id="local-vod-includes" rows="4" maxlength="800"></textarea>
+                </label>
+                <label class="admin-field">Catatan tambahan
+                  <input id="local-vod-note" type="text" maxlength="240" />
+                </label>
+              </div>
+            </details>
+
+            <details class="admin-price-block">
+              <summary><span>Tabel Durasi Shorts</span><small>Harga per durasi</small></summary>
+              <div class="admin-price-fields">
+                <label class="admin-field">Baris durasi — format: Durasi | Harga
+                  <textarea id="local-duration-rows" rows="4" maxlength="900" placeholder="0:00 – 1:05 | Rp50.000&#10;1:05 – 2:05 | Rp100.000"></textarea>
+                </label>
+                <div class="admin-grid-2">
+                  <label class="admin-field">Badge termasuk
+                    <input id="local-duration-badge" type="text" maxlength="60" />
+                  </label>
+                  <label class="admin-field">Tambahan revisi
+                    <input id="local-duration-extra" type="text" maxlength="160" />
+                  </label>
+                </div>
+                <label class="admin-field">Catatan panjang
+                  <textarea id="local-duration-note" rows="4" maxlength="600"></textarea>
+                </label>
+              </div>
+            </details>
+          </div>
+
+          <p class="admin-hint">Harga Rupiah dipakai untuk client Indonesia. Perubahan tampil di website setelah halaman di-refresh atau realtime masuk.</p>
+          <div class="admin-form-actions">
+            <button class="btn btn-primary" type="submit" id="local-pricing-save">Simpan harga Indonesia</button>
+          </div>
+          <p class="admin-status" id="local-pricing-status" role="status"></p>
+        </form>
+      </div>
+
+      <!-- GLOBAL PRICING -->
+      <div class="admin-price-region" id="pricing-global" hidden>
+        <form id="global-pricing-form" class="admin-form">
+          <div class="admin-price-stack">
+            <details class="admin-price-block" open>
+              <summary><span>Intro Global</span><small>Teks &amp; poin di panel USD</small></summary>
+              <div class="admin-price-fields">
+                <div class="admin-grid-2">
+                  <label class="admin-field">Badge
+                    <input id="global-intro-badge" type="text" maxlength="60" placeholder="USD · Worldwide" />
+                  </label>
+                  <label class="admin-field">Label tombol
+                    <input id="global-intro-cta" type="text" maxlength="40" placeholder="Tanya Global Rate" />
+                  </label>
+                </div>
+                <label class="admin-field">Judul panel
+                  <input id="global-intro-title" type="text" maxlength="100" />
+                </label>
+                <label class="admin-field">Teks intro
+                  <textarea id="global-intro-text" rows="3" maxlength="600"></textarea>
+                </label>
+                <label class="admin-field">Poin termasuk (satu per baris)
+                  <textarea id="global-intro-points" rows="4" maxlength="800"></textarea>
+                </label>
+              </div>
+            </details>
+
+            <details class="admin-price-block">
+              <summary><span>Shorts / Reels / TikTok</span><small>Kartu harga global</small></summary>
+              <div class="admin-price-fields">
+                <div class="admin-grid-2">
+                  <label class="admin-field">Label
+                    <input id="global-shorts-label" type="text" maxlength="80" />
+                  </label>
+                  <label class="admin-field">Harga
+                    <input id="global-shorts-price" type="text" maxlength="40" placeholder="$15" />
+                  </label>
+                </div>
+                <div class="admin-grid-2">
+                  <label class="admin-field">Satuan
+                    <input id="global-shorts-unit" type="text" maxlength="60" placeholder="/ video" />
+                  </label>
+                  <label class="admin-field">Detail / meta
+                    <input id="global-shorts-meta" type="text" maxlength="180" />
+                  </label>
+                </div>
+              </div>
+            </details>
+
+            <details class="admin-price-block">
+              <summary><span>5-Short Bundle</span><small>Kartu bundle global</small></summary>
+              <div class="admin-price-fields">
+                <div class="admin-grid-2">
+                  <label class="admin-field">Label
+                    <input id="global-bundle-label" type="text" maxlength="80" />
+                  </label>
+                  <label class="admin-field">Harga
+                    <input id="global-bundle-price" type="text" maxlength="40" placeholder="$65" />
+                  </label>
+                </div>
+                <div class="admin-grid-2">
+                  <label class="admin-field">Satuan
+                    <input id="global-bundle-unit" type="text" maxlength="60" placeholder="/ 5 videos" />
+                  </label>
+                  <label class="admin-field">Detail / meta
+                    <input id="global-bundle-meta" type="text" maxlength="180" />
+                  </label>
+                </div>
+              </div>
+            </details>
+
+            <details class="admin-price-block">
+              <summary><span>Katsui Clip</span><small>Kartu clip global</small></summary>
+              <div class="admin-price-fields">
+                <div class="admin-grid-2">
+                  <label class="admin-field">Label
+                    <input id="global-clip-label" type="text" maxlength="80" />
+                  </label>
+                  <label class="admin-field">Harga
+                    <input id="global-clip-price" type="text" maxlength="40" placeholder="$25" />
+                  </label>
+                </div>
+                <div class="admin-grid-2">
+                  <label class="admin-field">Satuan
+                    <input id="global-clip-unit" type="text" maxlength="60" placeholder="/ minute" />
+                  </label>
+                  <label class="admin-field">Detail / meta
+                    <input id="global-clip-meta" type="text" maxlength="180" />
+                  </label>
+                </div>
+              </div>
+            </details>
+
+            <details class="admin-price-block">
+              <summary><span>VOD Clip Lite</span><small>Kartu VOD global</small></summary>
+              <div class="admin-price-fields">
+                <div class="admin-grid-2">
+                  <label class="admin-field">Label
+                    <input id="global-vod-label" type="text" maxlength="80" />
+                  </label>
+                  <label class="admin-field">Harga
+                    <input id="global-vod-price" type="text" maxlength="40" placeholder="$25" />
+                  </label>
+                </div>
+                <div class="admin-grid-2">
+                  <label class="admin-field">Satuan
+                    <input id="global-vod-unit" type="text" maxlength="60" placeholder="/ minute" />
+                  </label>
+                  <label class="admin-field">Detail / meta
+                    <input id="global-vod-meta" type="text" maxlength="180" />
+                  </label>
+                </div>
+              </div>
+            </details>
+
+            <details class="admin-price-block">
+              <summary><span>Catatan Global</span><small>Revisi &amp; pembayaran</small></summary>
+              <div class="admin-price-fields">
+                <label class="admin-field">Extra revision
+                  <input id="global-note-extra" type="text" maxlength="200" placeholder="+$5 setelah 2x revisi gratis." />
+                </label>
+                <label class="admin-field">Payment
+                  <input id="global-note-payment" type="text" maxlength="200" placeholder="PayPal / Wise, biaya transfer ditanggung client." />
+                </label>
+                <label class="admin-field">Catatan quote
+                  <input id="global-note-quote" type="text" maxlength="240" />
+                </label>
+              </div>
+            </details>
+          </div>
+
+          <p class="admin-hint">Harga USD untuk client luar. Client Indonesia tetap memakai panel Rupiah.</p>
+          <div class="admin-form-actions">
+            <button class="btn btn-primary" type="submit" id="global-pricing-save">Simpan harga Global</button>
+          </div>
+          <p class="admin-status" id="global-pricing-status" role="status"></p>
+        </form>
+      </div>
     </section>
 
     <!-- SERVICES -->
@@ -203,7 +506,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" defer></script>
-<script src="../assets/js/supabase-config.js?v=20261105a" defer></script>
-<script src="admin.js?v=20261105a" defer></script>
+<script src="../assets/js/supabase-config.js?v=20261105b" defer></script>
+<script src="../assets/js/pricing-defaults.js?v=20261105b" defer></script>
+<script src="admin.js?v=20261105b" defer></script>
 </body>
 </html>

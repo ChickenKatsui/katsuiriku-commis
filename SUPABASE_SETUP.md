@@ -1,6 +1,6 @@
 # Supabase Setup — Admin & Data Live
 
-Website ini tetap static (GitHub Pages), tapi data slot, status layanan, dan Top Commish disimpan di **Supabase**. Admin login lewat **Supabase Auth**, dan hanya user yang terdaftar di tabel `admin_users` yang boleh menulis. Pengunjung biasa hanya bisa membaca.
+Website ini tetap static (GitHub Pages), tapi data slot, status layanan, harga Indonesia/Global, dan Top Commish disimpan di **Supabase**. Admin login lewat **Supabase Auth**, dan hanya user yang terdaftar di tabel `admin_users` yang boleh menulis. Pengunjung biasa hanya bisa membaca.
 
 > **Penting:** jangan pernah menaruh `service_role` key di website. Yang dipakai di browser hanya **Project URL** + **anon public key**. Anon key aman dipublikasikan karena RLS yang membatasi akses tulis.
 
@@ -56,6 +56,8 @@ create table if not exists public.site_data (
   clip_open boolean not null default true,
   shorts_open boolean not null default true,
   vod_open boolean not null default true,
+  local_pricing jsonb not null default '{}'::jsonb,
+  global_pricing jsonb not null default '{}'::jsonb,
   leaderboard_title text not null default 'Top Commish',
   leaderboard_period text not null default 'Bulan Ini',
   leaderboard jsonb not null default '[]'::jsonb
@@ -111,9 +113,11 @@ end $$;
 
 Kalau muncul pesan tabel/fungsi sudah ada, itu aman — SQL dibuat idempotent sebisa mungkin.
 
-### Migrasi status layanan (database yang sudah ada)
+### Migrasi database yang sudah ada
 
-Kalau `site_data` sudah dibuat sebelumnya, `create table if not exists` tidak menambah kolom baru. Jalankan SQL ini sekali di **SQL Editor**:
+Kalau `site_data` sudah dibuat sebelumnya, `create table if not exists` tidak menambah kolom baru. Jalankan SQL migrasi berikut sekali di **SQL Editor**.
+
+Status layanan:
 
 ```sql
 alter table public.site_data
@@ -122,7 +126,15 @@ alter table public.site_data
   add column if not exists vod_open boolean not null default true;
 ```
 
-Setelah itu refresh halaman `/admin/`. File SQL yang sama juga tersedia di `supabase/migrations/20261102_service_status.sql`.
+Harga Indonesia & Global:
+
+```sql
+alter table public.site_data
+  add column if not exists local_pricing jsonb not null default '{}'::jsonb,
+  add column if not exists global_pricing jsonb not null default '{}'::jsonb;
+```
+
+Setelah itu refresh halaman `/admin/`. File SQL yang sama juga tersedia di `supabase/migrations/20261102_service_status.sql` dan `supabase/migrations/20261105_pricing.sql`.
 
 ## 3. Buat user admin
 
@@ -173,7 +185,7 @@ Buka:
 
 `https://chickenkatsui.github.io/katsuiriku-commis/admin/`
 
-Login pakai email + password admin. Kalau berhasil, dashboard Slot, Status Layanan, dan Top Commish muncul.
+Login pakai email + password admin. Kalau berhasil, dashboard Slot, Harga, Layanan, dan Top Commish muncul.
 
 Halaman admin tidak dilink dari website publik dan diberi `noindex`. Tapi keamanan sebenarnya bukan dari URL rahasia — keamanan ada di **Supabase Auth + RLS**: user biasa yang membuka `/admin/` hanya melihat halaman login, dan walaupun memaksa melihat tampilan dashboard, semua tulis akan ditolak RLS.
 
@@ -183,9 +195,19 @@ Halaman admin tidak dilink dari website publik dan diberi `noindex`. Tapi keaman
 
 Isi **Total slot**, **Slot terisi**, dan catatan → **Simpan slot**. Website publik langsung update lewat Supabase Realtime (kalau realtime aktif; kalau tidak, fallback refresh ±1 menit).
 
+### Harga Indonesia & Global
+
+1. Buka tab **Harga**.
+2. Pilih sub-tab **Indonesia · IDR** atau **Global · USD**.
+3. Buka kartu layanan yang ingin diubah. Isi harga, satuan, daftar **Termasuk** (satu item per baris), catatan, dan label tombol order.
+4. Untuk Shorts, tabel durasi diisi dengan format `Durasi | Harga`, satu baris per durasi.
+5. Klik **Simpan harga Indonesia** atau **Simpan harga Global**.
+
+Harga Indonesia dan Global disimpan di kolom terpisah (`local_pricing` dan `global_pricing`), jadi client Indonesia tetap memakai Rupiah dan client luar memakai USD. Data default tetap aman kalau ada field yang kosong.
+
 ### Status layanan (open/closed)
 
-1. Buka tab **Status Layanan**.
+1. Buka tab **Layanan**.
 2. Toggle **Katsui Clip**, **Shorts / Reels / TikTok**, atau **VOD Clip Lite** ke **Open** / **Closed**.
 3. Klik **Simpan status**.
 4. Badge dan tombol order di website langsung mengikuti status. Kalau layanan ditutup, tombol order berubah menjadi **Layanan Ditutup**.
@@ -216,8 +238,9 @@ Website juga punya fallback polling tiap 60 detik + refresh saat tab kembali akt
 
 Selama `supabase-config.js` masih kosong, website publik memakai file cadangan:
 
-- `data/slots.json` — slot
+- `data/slots.json` — slot + status layanan
 - `data/top-commish.json` — leaderboard (default kosong)
+- `assets/js/pricing-defaults.js` — harga default Indonesia & Global
 
 Jadi situs tetap tampil normal. Setelah config diisi dan SQL dijalankan, Supabase menjadi sumber utama.
 
@@ -231,7 +254,8 @@ Jadi situs tetap tampil normal. Setelah config diisi dan SQL dijalankan, Supabas
 | "Gagal memeriksa akses admin" / function not found | SQL setup belum dijalankan atau `grant execute` gagal. Jalankan ulang bagian `is_admin`. |
 | Simpan gagal / RLS error | User belum ada di `admin_users`, atau policy RLS belum dibuat. Cek **Table Editor → site_data → RLS**. |
 | Website tidak update realtime | Aktifkan `site_data` di **Database → Replication**. Fallback refresh ±1 menit tetap jalan. |
-| Tab Status Layanan menampilkan "kolom status layanan belum ada" | Jalankan SQL migrasi status layanan di bagian **2**, lalu refresh `/admin/`. |
+| Tab Layanan menampilkan "kolom status layanan belum ada" | Jalankan SQL migrasi status layanan di bagian **2**, lalu refresh `/admin/`. |
+| Tab Harga menampilkan "kolom harga belum ada" | Jalankan SQL migrasi harga di bagian **2**, lalu refresh `/admin/`. |
 | `slot_filled_lte_total` error | Slot terisi lebih besar dari total. Kecilkan filled atau besarkan total. |
 
 ## 10. Keamanan

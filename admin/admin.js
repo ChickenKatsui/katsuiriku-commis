@@ -21,11 +21,28 @@
   let leaderboardRows = [];
   let routing = false;
   let serviceReady = false;
+  let pricingReady = false;
+
+  const PRICING = window.KATSUI_PRICING || null;
 
   const SERVICE_FIELDS = [
     { key: "clip_open", input: "clip-open" },
     { key: "shorts_open", input: "shorts-open" },
     { key: "vod_open", input: "vod-open" }
+  ];
+
+  const LOCAL_CARD_FIELDS = [
+    { key: "clip", prefix: "local-clip" },
+    { key: "shorts", prefix: "local-shorts" },
+    { key: "bundle", prefix: "local-bundle" },
+    { key: "vod", prefix: "local-vod" }
+  ];
+
+  const GLOBAL_CARD_FIELDS = [
+    { key: "shorts", prefix: "global-shorts" },
+    { key: "bundle", prefix: "global-bundle" },
+    { key: "clip", prefix: "global-clip" },
+    { key: "vod", prefix: "global-vod" }
   ];
 
   function setStatus(id, message, type){
@@ -139,6 +156,126 @@
     });
   }
 
+  function setPricingEnabled(enabled){
+    pricingReady = Boolean(enabled);
+    document.querySelectorAll("#tab-pricing input, #tab-pricing textarea").forEach(el => {
+      el.disabled = !pricingReady;
+    });
+    ["local-pricing-save", "global-pricing-save"].forEach(id => {
+      const btn = $(id);
+      if(btn) btn.disabled = !pricingReady;
+    });
+  }
+
+  function setInputValue(id, value){
+    const el = $(id);
+    if(el) el.value = value == null ? "" : String(value);
+  }
+
+  function readInputValue(id, maxLength){
+    const el = $(id);
+    return String(el ? el.value : "").trim().slice(0, maxLength);
+  }
+
+  function fillLocalCardFields(prefix, data){
+    setInputValue(prefix + "-title", data.title);
+    setInputValue(prefix + "-price", data.price);
+    setInputValue(prefix + "-unit", data.unit);
+    setInputValue(prefix + "-cta", data.cta);
+    setInputValue(prefix + "-includes", data.includes.join("\n"));
+    setInputValue(prefix + "-note", data.note);
+  }
+
+  function fillGlobalCardFields(prefix, data){
+    setInputValue(prefix + "-label", data.label);
+    setInputValue(prefix + "-price", data.price);
+    setInputValue(prefix + "-unit", data.unit);
+    setInputValue(prefix + "-meta", data.meta);
+  }
+
+  function fillPricingForm(data){
+    if(!PRICING) return;
+    const local = PRICING.normalizeLocal(data.local_pricing);
+    const global = PRICING.normalizeGlobal(data.global_pricing);
+
+    LOCAL_CARD_FIELDS.forEach(({ key, prefix }) => {
+      fillLocalCardFields(prefix, local[key]);
+    });
+    setInputValue("local-duration-rows",
+      local.duration.rows.map(row => `${row.duration} | ${row.price}`).join("\n"));
+    setInputValue("local-duration-badge", local.duration.badge);
+    setInputValue("local-duration-extra", local.duration.extra);
+    setInputValue("local-duration-note", local.duration.note);
+
+    setInputValue("global-intro-badge", global.intro.badge);
+    setInputValue("global-intro-title", global.intro.title);
+    setInputValue("global-intro-text", global.intro.text);
+    setInputValue("global-intro-points", global.intro.points.join("\n"));
+    setInputValue("global-intro-cta", global.intro.cta);
+    GLOBAL_CARD_FIELDS.forEach(({ key, prefix }) => {
+      fillGlobalCardFields(prefix, global[key]);
+    });
+    setInputValue("global-note-extra", global.note.extra_revision);
+    setInputValue("global-note-payment", global.note.payment);
+    setInputValue("global-note-quote", global.note.quote);
+  }
+
+  function readGlobalCardFields(prefix){
+    return {
+      label: readInputValue(prefix + "-label", 80),
+      price: readInputValue(prefix + "-price", 40),
+      unit: readInputValue(prefix + "-unit", 60),
+      meta: readInputValue(prefix + "-meta", 180)
+    };
+  }
+
+  function readLocalPricing(){
+    const data = {};
+    LOCAL_CARD_FIELDS.forEach(({ key, prefix }) => {
+      data[key] = {
+        title: readInputValue(prefix + "-title", 80),
+        price: readInputValue(prefix + "-price", 40),
+        unit: readInputValue(prefix + "-unit", 60),
+        includes: PRICING.parseList(readInputValue(prefix + "-includes", 800), 10, 80),
+        note: readInputValue(prefix + "-note", 240),
+        cta: readInputValue(prefix + "-cta", 40)
+      };
+    });
+    data.duration = {
+      rows: PRICING.parseDurationRows(readInputValue("local-duration-rows", 900)),
+      badge: readInputValue("local-duration-badge", 60),
+      extra: readInputValue("local-duration-extra", 160),
+      note: readInputValue("local-duration-note", 600)
+    };
+    return data;
+  }
+
+  function readGlobalPricing(){
+    const data = {
+      intro: {
+        badge: readInputValue("global-intro-badge", 60),
+        title: readInputValue("global-intro-title", 100),
+        text: readInputValue("global-intro-text", 600),
+        points: PRICING.parseList(readInputValue("global-intro-points", 800), 8, 80),
+        cta: readInputValue("global-intro-cta", 40)
+      },
+      note: {
+        extra_revision: readInputValue("global-note-extra", 200),
+        payment: readInputValue("global-note-payment", 200),
+        quote: readInputValue("global-note-quote", 240)
+      }
+    };
+    GLOBAL_CARD_FIELDS.forEach(({ key, prefix }) => {
+      data[key] = readGlobalCardFields(prefix);
+    });
+    return data;
+  }
+
+  function missingRequired(fields){
+    const found = fields.find(([, value]) => !String(value || "").trim());
+    return found ? found[0] : "";
+  }
+
   function fillLeaderboardForm(data){
     const title = $("leaderboard-title");
     const period = $("leaderboard-period");
@@ -200,16 +337,22 @@
 
     if(error){
       setServiceEnabled(false);
+      setPricingEnabled(false);
       setStatus("slot-status", "Gagal memuat data: " + error.message, "err");
       setStatus("service-status", "Gagal memuat data: " + error.message, "err");
+      setStatus("local-pricing-status", "Gagal memuat data: " + error.message, "err");
+      setStatus("global-pricing-status", "Gagal memuat data: " + error.message, "err");
       setStatus("leaderboard-status", "Gagal memuat data: " + error.message, "err");
       return;
     }
     if(!data){
       const message = "Baris site_data (id=1) belum ada. Jalankan SQL setup terlebih dahulu.";
       setServiceEnabled(false);
+      setPricingEnabled(false);
       setStatus("slot-status", message, "err");
       setStatus("service-status", message, "err");
+      setStatus("local-pricing-status", message, "err");
+      setStatus("global-pricing-status", message, "err");
       setStatus("leaderboard-status", message, "err");
       return;
     }
@@ -217,6 +360,7 @@
     siteData = data;
     fillSlotForm(data);
     fillServiceForm(data);
+    fillPricingForm(data);
     fillLeaderboardForm(data);
 
     const missingServiceColumns = SERVICE_FIELDS
@@ -231,6 +375,24 @@
       setStatus("service-status", "Fitur status layanan belum aktif. Jalankan SQL migrasi, lalu refresh.", "err");
     }else{
       setStatus("service-status", "", "");
+    }
+
+    const missingPricingColumns = ["local_pricing", "global_pricing"]
+      .filter(key => !(key in data));
+    const pricingHint = $("pricing-setup-hint");
+    const pricingAvailable = missingPricingColumns.length === 0 && Boolean(PRICING);
+    setPricingEnabled(pricingAvailable);
+    if(pricingHint) pricingHint.hidden = pricingAvailable;
+
+    if(!pricingAvailable){
+      const message = PRICING
+        ? "Fitur edit harga belum aktif. Jalankan SQL migrasi harga, lalu refresh."
+        : "File harga gagal dimuat. Refresh halaman atau cek assets/js/pricing-defaults.js.";
+      setStatus("local-pricing-status", message, "err");
+      setStatus("global-pricing-status", message, "err");
+    }else{
+      setStatus("local-pricing-status", "", "");
+      setStatus("global-pricing-status", "", "");
     }
   }
 
@@ -274,6 +436,85 @@
       show("login-screen");
     }finally{
       routing = false;
+    }
+  }
+
+  async function savePricingRegion(region){
+    if(!client || !currentUser || !pricingReady || !PRICING) return;
+
+    const isLocal = region === "local";
+    const statusId = region + "-pricing-status";
+    const btnId = region + "-pricing-save";
+    const column = isLocal ? "local_pricing" : "global_pricing";
+    let payload = null;
+    let missing = "";
+
+    if(isLocal){
+      payload = readLocalPricing();
+      missing = missingRequired([
+        ["Judul Katsui Clip", payload.clip.title],
+        ["Harga Katsui Clip", payload.clip.price],
+        ["Tombol Katsui Clip", payload.clip.cta],
+        ["Judul Shorts Reguler", payload.shorts.title],
+        ["Harga Shorts Reguler", payload.shorts.price],
+        ["Tombol Shorts Reguler", payload.shorts.cta],
+        ["Judul Paket 5 Shorts", payload.bundle.title],
+        ["Harga Paket 5 Shorts", payload.bundle.price],
+        ["Tombol Paket 5 Shorts", payload.bundle.cta],
+        ["Judul VOD Clip Lite", payload.vod.title],
+        ["Harga VOD Clip Lite", payload.vod.price],
+        ["Tombol VOD Clip Lite", payload.vod.cta]
+      ]);
+    }else{
+      payload = readGlobalPricing();
+      const required = [
+        ["Judul intro Global", payload.intro.title],
+        ["Teks intro Global", payload.intro.text],
+        ["Tombol intro Global", payload.intro.cta]
+      ];
+      GLOBAL_CARD_FIELDS.forEach(({ key }) => {
+        required.push([`Label ${key}`, payload[key].label]);
+        required.push([`Harga ${key}`, payload[key].price]);
+      });
+      missing = missingRequired(required);
+    }
+
+    if(missing){
+      setStatus(statusId, "Lengkapi field wajib: " + missing + ".", "err");
+      return;
+    }
+
+    const btn = $(btnId);
+    const originalLabel = btn ? btn.textContent : "";
+    if(btn){ btn.disabled = true; btn.textContent = "Menyimpan..."; }
+    setStatus(statusId, "Menyimpan ke Supabase...", "");
+
+    try{
+      const { error } = await client
+        .from("site_data")
+        .update({
+          [column]: payload,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", 1);
+
+      if(error) throw error;
+
+      siteData = { ...(siteData || {}), [column]: payload };
+      setStatus(statusId, "Tersimpan. Harga website langsung update.", "ok");
+    }catch(err){
+      const message = String(err.message || "");
+      if(/column|schema cache|does not exist/i.test(message)){
+        setPricingEnabled(false);
+        setStatus(statusId, "Gagal menyimpan: kolom harga belum ada. Jalankan SQL migrasi di SUPABASE_SETUP.md.", "err");
+      }else{
+        setStatus(statusId, "Gagal menyimpan: " + (message || "coba lagi."), "err");
+      }
+    }finally{
+      if(btn){
+        btn.disabled = !pricingReady;
+        btn.textContent = originalLabel || (isLocal ? "Simpan harga Indonesia" : "Simpan harga Global");
+      }
     }
   }
 
@@ -339,6 +580,37 @@
         });
       });
     });
+
+    document.querySelectorAll(".admin-price-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        const region = tab.dataset.priceRegion;
+        document.querySelectorAll(".admin-price-tab").forEach(t => {
+          const active = t === tab;
+          t.classList.toggle("active", active);
+          t.setAttribute("aria-selected", active ? "true" : "false");
+        });
+        const local = $("pricing-local");
+        const global = $("pricing-global");
+        if(local) local.hidden = region !== "local";
+        if(global) global.hidden = region !== "global";
+      });
+    });
+
+    const localPricingForm = $("local-pricing-form");
+    if(localPricingForm){
+      localPricingForm.addEventListener("submit", event => {
+        event.preventDefault();
+        savePricingRegion("local");
+      });
+    }
+
+    const globalPricingForm = $("global-pricing-form");
+    if(globalPricingForm){
+      globalPricingForm.addEventListener("submit", event => {
+        event.preventDefault();
+        savePricingRegion("global");
+      });
+    }
 
     ["slot-total", "slot-filled"].forEach(id => {
       const input = $(id);
@@ -546,6 +818,7 @@
 
     bindUI();
     setServiceEnabled(false);
+    setPricingEnabled(false);
     show("login-screen");
 
     client.auth.getSession().then(({ data, error }) => {
