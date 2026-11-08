@@ -32,7 +32,7 @@ Website commission statis (HTML/CSS/JS) dengan nuansa blush rose, cream, cocoa, 
 - Global / overseas: Shorts **$15 / video**, 5-Short Bundle **$65**, Katsui Clip & VOD Clip Lite **$25 / menit**, extra revision **$5**; payment PayPal/Wise
 - Rate global diposisikan low-mid market VGen (shorts $10–$35, bundle 5 $65–$90, clip/VOD $30–$50) supaya tetap kompetitif untuk client luar
 - Info slot commish: angka slot tampil di hero dan section khusus; badge kartu menampilkan status layanan (Open/Closed/Full)
-- Waktu pengerjaan: **1–3 hari** untuk Shorts, Clip, VOD, dan request editing lainnya; bisa lebih lama untuk durasi panjang atau demand editing baru
+- Estimasi waktu: Katsui Clip **1–4 hari**, Shorts **1–3 hari**, VOD **1–4 hari**
 - Status layanan: Katsui Clip, Shorts, dan VOD bisa diatur **Open / Closed** dari admin
 - Harga Indonesia (IDR) dan Global (USD) dipisah di admin: harga, satuan, daftar termasuk, catatan, label tombol, dan tabel durasi bisa diedit tanpa mengubah HTML
 - Jadwal commission: board publik **Waiting List / In Work / Done** di `/schedule/`, nama client bisa ditampilkan, inisial, atau anonymous per item
@@ -55,7 +55,7 @@ Buka `assets/js/main.js`:
 
 Harga default dan struktur detail panel ada di `assets/js/pricing-defaults.js`. Default About Me dan struktur jadwal ada di `assets/js/content-defaults.js`. Setelah admin menyimpan, nilai dari Supabase yang dipakai. Link/tombol langsung ada di `index.html`, `schedule/index.html`, dan `about/index.html`.
 
-Setelah mengubah `assets/css/style.css`, `assets/js/main.js`, `assets/js/pricing-defaults.js`, `assets/js/content-defaults.js`, `admin/admin.css`, atau `admin/admin.js`, ganti angka `?v=...` di `index.html`, `schedule/index.html`, `about/index.html`, dan `admin/index.html` agar browser/CDN tidak memakai cache lama. Versi saat ini: **20261107d**. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
+Setelah mengubah `assets/css/style.css`, `assets/js/main.js`, `assets/js/pricing-defaults.js`, `assets/js/content-defaults.js`, `admin/admin.css`, atau `admin/admin.js`, ganti angka `?v=...` di `index.html`, `schedule/index.html`, `about/index.html`, dan `admin/index.html` agar browser/CDN tidak memakai cache lama. Versi saat ini: **20261108b**. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
 
 ## Admin panel & data live
 

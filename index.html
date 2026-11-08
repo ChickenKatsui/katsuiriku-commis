@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fredoka:wght@400;500;600;700&family=Manrope:wght@500;700;800&family=Ubuntu:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=20261107d" />
+<link rel="stylesheet" href="assets/css/style.css?v=20261108b" />
 </head>
 <body>
 
@@ -37,7 +37,6 @@
     <nav class="nav" id="main-nav" aria-label="Navigasi utama">
       <a href="#home">Home</a>
       <a href="#slots">Slot</a>
-      <a href="#process">Waktu</a>
       <a href="#clip">Clip</a>
       <a href="#shorts">Shorts</a>
       <a href="#vod">VOD</a>
@@ -80,31 +79,6 @@
     </div>
   </section>
 
-  <!-- HIGHLIGHTS -->
-  <section class="features reveal" aria-label="Yang kamu dapat">
-    <div class="feature">
-      <span class="feature-index">01</span>
-      <div class="feature-body">
-        <strong>Rapi &amp; Clean</strong>
-        <small>Editing enak ditonton, tanpa noise berlebih.</small>
-      </div>
-    </div>
-    <div class="feature">
-      <span class="feature-index">02</span>
-      <div class="feature-body">
-        <strong>2x Revisi</strong>
-        <small>Revisi ramah &amp; jelas, langsung ke inti.</small>
-      </div>
-    </div>
-    <div class="feature">
-      <span class="feature-index">03</span>
-      <div class="feature-body">
-        <strong>Asset &amp; BGM</strong>
-        <small>Dibantu carikan sesuai mood clip kamu.</small>
-      </div>
-    </div>
-  </section>
-
   <!-- SLOT INFO -->
   <section id="slots" class="section section-slots">
     <div class="slot-board reveal" aria-live="polite">
@@ -125,40 +99,6 @@
           <span class="slot-filled">Terisi <span id="slot-filled">0</span> dari <span id="slot-total-2">5</span></span>
         </div>
         <a class="btn btn-slot" href="#contact">Tanya Slot <span aria-hidden="true">→</span></a>
-      </div>
-    </div>
-  </section>
-
-  <!-- PROCESSING TIME -->
-  <section id="process" class="section section-process">
-    <div class="process-board reveal">
-      <div class="process-copy">
-        <span class="section-kicker">Info — Waktu Pengerjaan</span>
-        <h2 class="process-title">Estimasi 1–3 Hari</h2>
-        <p class="process-note">Berlaku untuk Shorts, Clip, VOD, dan request editing lainnya.</p>
-      </div>
-      <div class="process-list">
-        <div class="process-item">
-          <span class="process-index">01</span>
-          <div>
-            <strong>1–3 hari</strong>
-            <small>Waktu pengerjaan normal untuk Shorts, Clip, dan VOD.</small>
-          </div>
-        </div>
-        <div class="process-item">
-          <span class="process-index">02</span>
-          <div>
-            <strong>Durasi lebih panjang</strong>
-            <small>Waktu pengerjaan bisa bertambah mengikuti panjang clip.</small>
-          </div>
-        </div>
-        <div class="process-item">
-          <span class="process-index">03</span>
-          <div>
-            <strong>Demand editing baru</strong>
-            <small>Kalau tekniknya belum dikuasai, butuh waktu tambahan untuk mempelajarinya.</small>
-          </div>
-        </div>
       </div>
     </div>
   </section>
@@ -202,6 +142,7 @@
           <span class="badge badge-gold" data-service-badge="clip">Open</span>
         </div>
         <p class="price"><span data-price-value>Rp60.000</span> <small data-price-unit>/ menit</small></p>
+        <p class="service-eta">Estimasi 1–4 hari</p>
         <div class="includes-block" data-price-includes-block>
           <span class="includes-label">Termasuk</span>
           <ul class="includes-list" data-price-includes>
@@ -242,6 +183,7 @@
           <span class="badge" data-service-badge="shorts">Open</span>
         </div>
         <p class="price"><span data-price-value>Rp50.000</span> <small data-price-unit>/ video · 1 menit</small></p>
+        <p class="service-eta">Estimasi 1–3 hari</p>
         <div class="includes-block" data-price-includes-block>
           <span class="includes-label">Termasuk</span>
           <ul class="includes-list" data-price-includes>
@@ -261,6 +203,7 @@
           <span class="badge badge-gold" data-service-badge="shorts">Open</span>
         </div>
         <p class="price"><span data-price-value>Rp240.000</span> <small data-price-unit>/ 5 video</small></p>
+        <p class="service-eta">Estimasi 1–3 hari</p>
         <div class="includes-block" data-price-includes-block>
           <span class="includes-label">Termasuk</span>
           <ul class="includes-list" data-price-includes>
@@ -317,6 +260,7 @@
           <span class="badge" data-service-badge="vod">Open</span>
         </div>
         <p class="price"><span data-price-value>Rp60.000</span> <small data-price-unit>/ menit</small></p>
+        <p class="service-eta">Estimasi 1–4 hari</p>
         <div class="includes-block" data-price-includes-block>
           <span class="includes-label">Termasuk</span>
           <ul class="includes-list" data-price-includes>
@@ -359,7 +303,6 @@
           <li>Caption / subtitle</li>
           <li>2x revisi</li>
           <li>File final siap upload</li>
-          <li>Turnaround 1–3 hari</li>
         </ul>
         <a class="btn btn-slot" href="#contact" id="global-intro-cta">Tanya Global Rate</a>
       </div>
@@ -482,10 +425,10 @@
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" defer></script>
-<script src="assets/js/supabase-config.js?v=20261107d" defer></script>
-<script src="assets/js/pricing-defaults.js?v=20261107d" defer></script>
-<script src="assets/js/content-defaults.js?v=20261107d" defer></script>
-<script src="assets/js/main.js?v=20261107d" defer></script>
+<script src="assets/js/supabase-config.js?v=20261108b" defer></script>
+<script src="assets/js/pricing-defaults.js?v=20261108b" defer></script>
+<script src="assets/js/content-defaults.js?v=20261108b" defer></script>
+<script src="assets/js/main.js?v=20261108b" defer></script>
 <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>

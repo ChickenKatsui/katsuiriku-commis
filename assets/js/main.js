@@ -465,7 +465,10 @@ function renderPricing(state = siteData){
   }
   if(title) title.textContent = intro.title;
   if(text) text.textContent = intro.text;
-  renderTextList(points, intro.points);
+  const introPoints = Array.isArray(intro.points)
+    ? intro.points.filter(point => !/turnaround|estimasi/i.test(String(point)))
+    : intro.points;
+  renderTextList(points, introPoints);
   if(cta) cta.textContent = intro.cta;
 
   ["shorts", "bundle", "clip", "vod"].forEach(key => renderGlobalCard(key, global[key]));

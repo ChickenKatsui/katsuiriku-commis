@@ -57,7 +57,7 @@
       badge: "USD · Worldwide",
       title: "Clip & Shorts untuk Creator Luar",
       text: "Rate internasional yang ramah untuk creator luar, dengan output rapi, caption, dan revisi yang jelas. Cocok untuk VTuber, streamer, dan creator yang butuh clip konsisten.",
-      points: ["Caption / subtitle", "2x revisi", "File final siap upload", "Turnaround 1–3 hari"],
+      points: ["Caption / subtitle", "2x revisi", "File final siap upload"],
       cta: "Tanya Global Rate"
     },
     shorts: {
