@@ -22,8 +22,12 @@
   let routing = false;
   let serviceReady = false;
   let pricingReady = false;
+  let scheduleReady = false;
+  let aboutReady = false;
+  let scheduleRows = [];
 
   const PRICING = window.KATSUI_PRICING || null;
+  const CONTENT = window.KATSUI_CONTENT || null;
 
   const SERVICE_FIELDS = [
     { key: "clip_open", input: "clip-open" },
@@ -167,6 +171,22 @@
     });
   }
 
+  function setScheduleEnabled(enabled){
+    scheduleReady = Boolean(enabled);
+    document.querySelectorAll("#tab-schedule input, #tab-schedule select, #tab-schedule textarea, #tab-schedule button").forEach(el => {
+      el.disabled = !scheduleReady;
+    });
+  }
+
+  function setAboutEnabled(enabled){
+    aboutReady = Boolean(enabled);
+    document.querySelectorAll("#tab-about input, #tab-about textarea").forEach(el => {
+      el.disabled = !aboutReady;
+    });
+    const save = $("about-save");
+    if(save) save.disabled = !aboutReady;
+  }
+
   function setInputValue(id, value){
     const el = $(id);
     if(el) el.value = value == null ? "" : String(value);
@@ -276,6 +296,173 @@
     return found ? found[0] : "";
   }
 
+  function updateScheduleTotal(){
+    const el = $("schedule-total");
+    if(el) el.textContent = scheduleRows.length;
+  }
+
+  function fillScheduleForm(data){
+    scheduleRows = CONTENT
+      ? CONTENT.normalizeSchedule(data.schedule).map(row => ({ ...row }))
+      : [];
+    renderScheduleRows();
+  }
+
+  function renderScheduleRows(){
+    const wrap = $("schedule-rows");
+    if(!wrap) return;
+
+    const statuses = CONTENT
+      ? CONTENT.statuses
+      : [
+          { key: "waiting", label: "Waiting List" },
+          { key: "in_work", label: "In Work" },
+          { key: "done", label: "Done" }
+        ];
+    const visibilities = CONTENT
+      ? CONTENT.visibilities
+      : [
+          { key: "name", label: "Tampilkan nama" },
+          { key: "initial", label: "Inisial saja" },
+          { key: "anonymous", label: "Anonymous" }
+        ];
+
+    if(!scheduleRows.length){
+      wrap.innerHTML = `<p class="admin-hint admin-schedule-empty">Belum ada item. Klik "Tambah item" untuk mulai.</p>`;
+      updateScheduleTotal();
+      return;
+    }
+
+    wrap.innerHTML = scheduleRows.map((row, index) => `
+      <div class="admin-schedule-row" data-index="${index}">
+        <div class="admin-schedule-row-head">
+          <span class="admin-rank">${String(index + 1).padStart(2, "0")}</span>
+          <span class="admin-schedule-row-title">${escapeAttr(row.title || "Item baru")}</span>
+          <div class="admin-schedule-row-actions">
+            <button type="button" data-action="up" ${index === 0 ? "disabled" : ""} aria-label="Naikkan">&uarr;</button>
+            <button type="button" data-action="down" ${index === scheduleRows.length - 1 ? "disabled" : ""} aria-label="Turunkan">&darr;</button>
+            <button type="button" data-action="delete" aria-label="Hapus">Hapus</button>
+          </div>
+        </div>
+        <div class="admin-schedule-fields">
+          <label class="admin-field">Judul
+            <input data-field="title" type="text" maxlength="80" value="${escapeAttr(row.title)}" placeholder="Shorts - nama project" />
+          </label>
+          <label class="admin-field">Client
+            <input data-field="client_name" type="text" maxlength="60" value="${escapeAttr(row.client_name)}" placeholder="Nama client" />
+          </label>
+          <label class="admin-field">Layanan
+            <input data-field="service" type="text" maxlength="40" value="${escapeAttr(row.service)}" placeholder="Shorts" />
+          </label>
+          <label class="admin-field">Status
+            <select data-field="status">
+              ${statuses.map(status => `<option value="${status.key}"${row.status === status.key ? " selected" : ""}>${status.label}</option>`).join("")}
+            </select>
+          </label>
+          <label class="admin-field">Tampil nama
+            <select data-field="visibility">
+              ${visibilities.map(visibility => `<option value="${visibility.key}"${row.visibility === visibility.key ? " selected" : ""}>${visibility.label}</option>`).join("")}
+            </select>
+          </label>
+          <label class="admin-field">Catatan
+            <input data-field="note" type="text" maxlength="140" value="${escapeAttr(row.note)}" placeholder="Opsional" />
+          </label>
+        </div>
+      </div>
+    `).join("");
+
+    wrap.querySelectorAll(".admin-schedule-row").forEach((rowEl, index) => {
+      rowEl.querySelectorAll("[data-field]").forEach(input => {
+        const update = () => {
+          if(!scheduleRows[index]) return;
+          scheduleRows[index][input.dataset.field] = input.value;
+          if(input.dataset.field === "title"){
+            const title = rowEl.querySelector(".admin-schedule-row-title");
+            if(title) title.textContent = input.value.trim() || "Item baru";
+          }
+        };
+        input.addEventListener("input", update);
+        input.addEventListener("change", update);
+      });
+
+      rowEl.querySelectorAll("[data-action]").forEach(button => {
+        button.addEventListener("click", () => {
+          const action = button.dataset.action;
+          if(action === "delete"){
+            scheduleRows.splice(index, 1);
+          }else if(action === "up" && index > 0){
+            [scheduleRows[index - 1], scheduleRows[index]] = [scheduleRows[index], scheduleRows[index - 1]];
+          }else if(action === "down" && index < scheduleRows.length - 1){
+            [scheduleRows[index + 1], scheduleRows[index]] = [scheduleRows[index], scheduleRows[index + 1]];
+          }
+          renderScheduleRows();
+        });
+      });
+    });
+
+    updateScheduleTotal();
+  }
+
+  function readSchedule(){
+    const entries = scheduleRows
+      .map(row => ({
+        title: String(row.title || "").trim().slice(0, 80),
+        client_name: String(row.client_name || "").trim().slice(0, 60),
+        service: String(row.service || "").trim().slice(0, 40),
+        status: String(row.status || "waiting"),
+        visibility: String(row.visibility || "name"),
+        note: String(row.note || "").trim().slice(0, 140)
+      }))
+      .filter(row => row.title)
+      .map((row, index) => ({ ...row, position: index + 1 }));
+
+    return CONTENT ? CONTENT.normalizeSchedule(entries) : entries;
+  }
+
+  function fillAboutForm(data){
+    if(!CONTENT) return;
+    const about = CONTENT.normalizeAbout(data.about);
+    setInputValue("about-kicker", about.kicker);
+    setInputValue("about-name", about.name);
+    setInputValue("about-role", about.role);
+    setInputValue("about-tagline", about.tagline);
+    setInputValue("about-bio", about.bio);
+    setInputValue("about-location", about.location);
+    setInputValue("about-timezone", about.timezone);
+    setInputValue("about-birthday", about.birthday);
+    setInputValue("about-languages", about.languages);
+    setInputValue("about-photo", about.photo_url);
+    setInputValue("about-software", about.software.join("\n"));
+    setInputValue("about-equipment", about.equipment.join("\n"));
+    setInputValue("about-hobbies", about.hobbies.join("\n"));
+    setInputValue("about-favorites", about.favorites.join("\n"));
+    setInputValue("about-fun-facts", about.fun_facts.join("\n"));
+    setInputValue("about-commission-note", about.commission_note);
+  }
+
+  function readAbout(){
+    const data = {
+      kicker: readInputValue("about-kicker", 40),
+      name: readInputValue("about-name", 80),
+      role: readInputValue("about-role", 100),
+      tagline: readInputValue("about-tagline", 160),
+      bio: readInputValue("about-bio", 1200),
+      location: readInputValue("about-location", 80),
+      timezone: readInputValue("about-timezone", 80),
+      birthday: readInputValue("about-birthday", 80),
+      languages: readInputValue("about-languages", 120),
+      photo_url: readInputValue("about-photo", 500),
+      software: CONTENT ? CONTENT.parseList(readInputValue("about-software", 900), 12, 80) : [],
+      equipment: CONTENT ? CONTENT.parseList(readInputValue("about-equipment", 900), 12, 80) : [],
+      hobbies: CONTENT ? CONTENT.parseList(readInputValue("about-hobbies", 900), 12, 80) : [],
+      favorites: CONTENT ? CONTENT.parseList(readInputValue("about-favorites", 900), 12, 80) : [],
+      fun_facts: CONTENT ? CONTENT.parseList(readInputValue("about-fun-facts", 900), 12, 100) : [],
+      commission_note: readInputValue("about-commission-note", 400)
+    };
+
+    return CONTENT ? CONTENT.normalizeAbout(data) : data;
+  }
+
   function fillLeaderboardForm(data){
     const title = $("leaderboard-title");
     const period = $("leaderboard-period");
@@ -338,10 +525,14 @@
     if(error){
       setServiceEnabled(false);
       setPricingEnabled(false);
+      setScheduleEnabled(false);
+      setAboutEnabled(false);
       setStatus("slot-status", "Gagal memuat data: " + error.message, "err");
       setStatus("service-status", "Gagal memuat data: " + error.message, "err");
       setStatus("local-pricing-status", "Gagal memuat data: " + error.message, "err");
       setStatus("global-pricing-status", "Gagal memuat data: " + error.message, "err");
+      setStatus("schedule-status", "Gagal memuat data: " + error.message, "err");
+      setStatus("about-status", "Gagal memuat data: " + error.message, "err");
       setStatus("leaderboard-status", "Gagal memuat data: " + error.message, "err");
       return;
     }
@@ -349,10 +540,14 @@
       const message = "Baris site_data (id=1) belum ada. Jalankan SQL setup terlebih dahulu.";
       setServiceEnabled(false);
       setPricingEnabled(false);
+      setScheduleEnabled(false);
+      setAboutEnabled(false);
       setStatus("slot-status", message, "err");
       setStatus("service-status", message, "err");
       setStatus("local-pricing-status", message, "err");
       setStatus("global-pricing-status", message, "err");
+      setStatus("schedule-status", message, "err");
+      setStatus("about-status", message, "err");
       setStatus("leaderboard-status", message, "err");
       return;
     }
@@ -361,6 +556,8 @@
     fillSlotForm(data);
     fillServiceForm(data);
     fillPricingForm(data);
+    fillScheduleForm(data);
+    fillAboutForm(data);
     fillLeaderboardForm(data);
 
     const missingServiceColumns = SERVICE_FIELDS
@@ -393,6 +590,35 @@
     }else{
       setStatus("local-pricing-status", "", "");
       setStatus("global-pricing-status", "", "");
+    }
+
+    const scheduleAvailable = ("schedule" in data) && Boolean(CONTENT);
+    const scheduleHint = $("schedule-setup-hint");
+    setScheduleEnabled(scheduleAvailable);
+    if(scheduleAvailable) renderScheduleRows();
+    if(scheduleHint) scheduleHint.hidden = scheduleAvailable;
+
+    if(!scheduleAvailable){
+      const message = CONTENT
+        ? "Fitur jadwal belum aktif. Jalankan SQL migrasi jadwal, lalu refresh."
+        : "File jadwal gagal dimuat. Refresh halaman atau cek assets/js/content-defaults.js.";
+      setStatus("schedule-status", message, "err");
+    }else{
+      setStatus("schedule-status", "", "");
+    }
+
+    const aboutAvailable = ("about" in data) && Boolean(CONTENT);
+    const aboutHint = $("about-setup-hint");
+    setAboutEnabled(aboutAvailable);
+    if(aboutHint) aboutHint.hidden = aboutAvailable;
+
+    if(!aboutAvailable){
+      const message = CONTENT
+        ? "Fitur About Me belum aktif. Jalankan SQL migrasi About Me, lalu refresh."
+        : "File About Me gagal dimuat. Refresh halaman atau cek assets/js/content-defaults.js.";
+      setStatus("about-status", message, "err");
+    }else{
+      setStatus("about-status", "", "");
     }
   }
 
@@ -518,6 +744,97 @@
     }
   }
 
+  async function saveSchedule(){
+    if(!client || !currentUser || !scheduleReady || !CONTENT) return;
+
+    const blankIndex = scheduleRows.findIndex(row => !String(row.title || "").trim());
+    if(blankIndex !== -1){
+      setStatus("schedule-status", `Judul item ${blankIndex + 1} masih kosong.`, "err");
+      return;
+    }
+
+    const payload = readSchedule();
+    const btn = $("schedule-save");
+    const originalLabel = btn ? btn.textContent : "";
+    if(btn){ btn.disabled = true; btn.textContent = "Menyimpan..."; }
+    setStatus("schedule-status", "Menyimpan ke Supabase...", "");
+
+    try{
+      const { error } = await client
+        .from("site_data")
+        .update({
+          schedule: payload,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", 1);
+
+      if(error) throw error;
+
+      siteData = { ...(siteData || {}), schedule: payload };
+      setStatus("schedule-status", "Tersimpan. Board jadwal website langsung update.", "ok");
+    }catch(err){
+      const message = String(err.message || "");
+      if(/column|schema cache|does not exist/i.test(message)){
+        setScheduleEnabled(false);
+        setStatus("schedule-status", "Gagal menyimpan: kolom jadwal belum ada. Jalankan SQL migrasi di SUPABASE_SETUP.md.", "err");
+      }else{
+        setStatus("schedule-status", "Gagal menyimpan: " + (message || "coba lagi."), "err");
+      }
+    }finally{
+      if(btn){
+        btn.disabled = !scheduleReady;
+        btn.textContent = originalLabel || "Simpan jadwal";
+      }
+    }
+  }
+
+  async function saveAbout(){
+    if(!client || !currentUser || !aboutReady || !CONTENT) return;
+
+    if(!readInputValue("about-name", 80)){
+      setStatus("about-status", "Nama tampilan wajib diisi.", "err");
+      return;
+    }
+    if(!readInputValue("about-bio", 1200)){
+      setStatus("about-status", "Bio wajib diisi.", "err");
+      return;
+    }
+
+    const payload = readAbout();
+    const btn = $("about-save");
+    const originalLabel = btn ? btn.textContent : "";
+    if(btn){ btn.disabled = true; btn.textContent = "Menyimpan..."; }
+    setStatus("about-status", "Menyimpan ke Supabase...", "");
+
+    try{
+      const { error } = await client
+        .from("site_data")
+        .update({
+          about: payload,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", 1);
+
+      if(error) throw error;
+
+      siteData = { ...(siteData || {}), about: payload };
+      setStatus("about-status", "Tersimpan. Halaman About Me langsung update.", "ok");
+    }catch(err){
+      const message = String(err.message || "");
+      if(/column|schema cache|does not exist/i.test(message)){
+        setAboutEnabled(false);
+        setStatus("about-status", "Gagal menyimpan: kolom About Me belum ada. Jalankan SQL migrasi di SUPABASE_SETUP.md.", "err");
+      }else{
+        setStatus("about-status", "Gagal menyimpan: " + (message || "coba lagi."), "err");
+      }
+    }finally{
+      if(btn){
+        btn.disabled = !aboutReady;
+        btn.textContent = originalLabel || "Simpan About Me";
+      }
+    }
+  }
+
   function bindUI(){
     const loginForm = $("login-form");
     if(loginForm){
@@ -609,6 +926,46 @@
       globalPricingForm.addEventListener("submit", event => {
         event.preventDefault();
         savePricingRegion("global");
+      });
+    }
+
+    const scheduleAdd = $("schedule-add");
+    if(scheduleAdd){
+      scheduleAdd.addEventListener("click", () => {
+        if(!scheduleReady) return;
+        if(scheduleRows.length >= 100){
+          setStatus("schedule-status", "Maksimal 100 item jadwal.", "err");
+          return;
+        }
+        scheduleRows.push({
+          title: "",
+          client_name: "",
+          service: "",
+          status: "waiting",
+          visibility: "name",
+          note: "",
+          position: scheduleRows.length + 1
+        });
+        renderScheduleRows();
+        const wrap = $("schedule-rows");
+        const input = wrap && wrap.querySelector(".admin-schedule-row:last-child input[data-field='title']");
+        if(input) input.focus();
+      });
+    }
+
+    const scheduleForm = $("schedule-form");
+    if(scheduleForm){
+      scheduleForm.addEventListener("submit", event => {
+        event.preventDefault();
+        saveSchedule();
+      });
+    }
+
+    const aboutForm = $("about-form");
+    if(aboutForm){
+      aboutForm.addEventListener("submit", event => {
+        event.preventDefault();
+        saveAbout();
       });
     }
 
@@ -819,6 +1176,8 @@
     bindUI();
     setServiceEnabled(false);
     setPricingEnabled(false);
+    setScheduleEnabled(false);
+    setAboutEnabled(false);
     show("login-screen");
 
     client.auth.getSession().then(({ data, error }) => {

@@ -1,6 +1,6 @@
 # Supabase Setup — Admin & Data Live
 
-Website ini tetap static (GitHub Pages), tapi data slot, status layanan, harga Indonesia/Global, dan Top Commish disimpan di **Supabase**. Admin login lewat **Supabase Auth**, dan hanya user yang terdaftar di tabel `admin_users` yang boleh menulis. Pengunjung biasa hanya bisa membaca.
+Website ini tetap static (GitHub Pages), tapi data slot, status layanan, harga Indonesia/Global, jadwal commission, About Me, dan Top Commish disimpan di **Supabase**. Admin login lewat **Supabase Auth**, dan hanya user yang terdaftar di tabel `admin_users` yang boleh menulis. Pengunjung biasa hanya bisa membaca.
 
 > **Penting:** jangan pernah menaruh `service_role` key di website. Yang dipakai di browser hanya **Project URL** + **anon public key**. Anon key aman dipublikasikan karena RLS yang membatasi akses tulis.
 
@@ -58,6 +58,8 @@ create table if not exists public.site_data (
   vod_open boolean not null default true,
   local_pricing jsonb not null default '{}'::jsonb,
   global_pricing jsonb not null default '{}'::jsonb,
+  schedule jsonb not null default '[]'::jsonb,
+  about jsonb not null default '{}'::jsonb,
   leaderboard_title text not null default 'Top Commish',
   leaderboard_period text not null default 'Bulan Ini',
   leaderboard jsonb not null default '[]'::jsonb
@@ -134,7 +136,15 @@ alter table public.site_data
   add column if not exists global_pricing jsonb not null default '{}'::jsonb;
 ```
 
-Setelah itu refresh halaman `/admin/`. File SQL yang sama juga tersedia di `supabase/migrations/20261102_service_status.sql` dan `supabase/migrations/20261105_pricing.sql`.
+Jadwal commission & About Me:
+
+```sql
+alter table public.site_data
+  add column if not exists schedule jsonb not null default '[]'::jsonb,
+  add column if not exists about jsonb not null default '{}'::jsonb;
+```
+
+Setelah itu refresh halaman `/admin/`. File SQL yang sama juga tersedia di `supabase/migrations/20261102_service_status.sql`, `supabase/migrations/20261105_pricing.sql`, dan `supabase/migrations/20261107_schedule_about.sql`.
 
 ## 3. Buat user admin
 
@@ -185,7 +195,7 @@ Buka:
 
 `https://chickenkatsui.github.io/katsuiriku-commis/admin/`
 
-Login pakai email + password admin. Kalau berhasil, dashboard Slot, Harga, Layanan, dan Top Commish muncul.
+Login pakai email + password admin. Kalau berhasil, dashboard Slot, Harga, Layanan, Jadwal, About Me, dan Top Commish muncul.
 
 Halaman admin tidak dilink dari website publik dan diberi `noindex`. Tapi keamanan sebenarnya bukan dari URL rahasia — keamanan ada di **Supabase Auth + RLS**: user biasa yang membuka `/admin/` hanya melihat halaman login, dan walaupun memaksa melihat tampilan dashboard, semua tulis akan ditolak RLS.
 
@@ -214,6 +224,24 @@ Harga Indonesia dan Global disimpan di kolom terpisah (`local_pricing` dan `glob
 
 Status layanan berbeda dari slot commish. Slot tetap diatur di tab **Slot Commish**; layanan bisa ditutup sementara walaupun slot masih tersedia.
 
+### Jadwal commission (Waiting List / In Work / Done)
+
+1. Buka tab **Jadwal**.
+2. Klik **+ Tambah item**.
+3. Isi **Judul**, **Client**, **Layanan**, pilih **Status** dan **Tampil nama**, lalu tambahkan **Catatan** jika perlu.
+4. Gunakan tombol panah untuk mengatur urutan, atau **Hapus** untuk membuang item.
+5. Klik **Simpan jadwal**. Board publik di `/schedule/` akan mengikuti data ini.
+
+Status yang tersedia: **Waiting List**, **In Work**, dan **Done**. Pilihan tampil nama: **Tampilkan nama**, **Inisial saja**, atau **Anonymous**. Urutan baris = urutan tampil di board.
+
+### About Me
+
+1. Buka tab **About Me**.
+2. Isi nama, role, tagline, bio, lokasi, timezone, birthday, dan bahasa.
+3. Isi daftar **Software**, **Equipment**, **Hobbies**, **Favorites**, dan **Fun facts** dengan satu item per baris.
+4. Isi **Catatan commission** dan **Foto URL** jika ingin memakai gambar lain.
+5. Klik **Simpan About Me**. Perubahan tampil di `/about/` dan ringkasan About di homepage.
+
 ### Top Commish (manual, top 5)
 
 1. Buka tab **Top Commish**.
@@ -241,6 +269,7 @@ Selama `supabase-config.js` masih kosong, website publik memakai file cadangan:
 - `data/slots.json` — slot + status layanan
 - `data/top-commish.json` — leaderboard (default kosong)
 - `assets/js/pricing-defaults.js` — harga default Indonesia & Global
+- `assets/js/content-defaults.js` — default About Me + jadwal kosong
 
 Jadi situs tetap tampil normal. Setelah config diisi dan SQL dijalankan, Supabase menjadi sumber utama.
 
@@ -256,6 +285,8 @@ Jadi situs tetap tampil normal. Setelah config diisi dan SQL dijalankan, Supabas
 | Website tidak update realtime | Aktifkan `site_data` di **Database → Replication**. Fallback refresh ±1 menit tetap jalan. |
 | Tab Layanan menampilkan "kolom status layanan belum ada" | Jalankan SQL migrasi status layanan di bagian **2**, lalu refresh `/admin/`. |
 | Tab Harga menampilkan "kolom harga belum ada" | Jalankan SQL migrasi harga di bagian **2**, lalu refresh `/admin/`. |
+| Tab Jadwal menampilkan "kolom jadwal belum ada" | Jalankan SQL migrasi jadwal & About Me di bagian **2**, lalu refresh `/admin/`. |
+| Tab About Me menampilkan "kolom About Me belum ada" | Jalankan SQL migrasi jadwal & About Me di bagian **2**, lalu refresh `/admin/`. |
 | `slot_filled_lte_total` error | Slot terisi lebih besar dari total. Kecilkan filled atau besarkan total. |
 
 ## 10. Keamanan

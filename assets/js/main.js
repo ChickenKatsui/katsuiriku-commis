@@ -31,6 +31,8 @@ const PORTFOLIO_PLAYLIST = "https://youtube.com/playlist?list=PLNJ5KH9O1soM&si=l
    Admin hanya bisa menulis lewat /admin/ dan RLS Supabase.
    ============================================================ */
 const PRICING_API = window.KATSUI_PRICING || null;
+const CONTENT_API = window.KATSUI_CONTENT || null;
+const SITE_BASE = document.body ? (document.body.dataset.base || "") : "";
 
 const SITE_DATA_DEFAULT = {
   slot_total: 5,
@@ -44,12 +46,14 @@ const SITE_DATA_DEFAULT = {
   leaderboard_title: "Top Commish",
   leaderboard_period: "Bulan Ini",
   leaderboard: [],
+  schedule: [],
+  about: {},
   updated_at: null,
 };
 
 const FALLBACK_DATA = {
-  slots: "data/slots.json",
-  leaderboard: "data/top-commish.json",
+  slots: `${SITE_BASE}data/slots.json`,
+  leaderboard: `${SITE_BASE}data/top-commish.json`,
 };
 
 let siteData = normalizeSiteData(SITE_DATA_DEFAULT);
@@ -88,7 +92,7 @@ function icon(name){
 function renderBrand(){
   const logo = document.querySelector(".logo");
   if(logo && BRAND.logoImage){
-    logo.innerHTML = `<img src="${BRAND.logoImage}" alt="${BRAND.name} logo">`;
+    logo.innerHTML = `<img src="${SITE_BASE}${BRAND.logoImage}" alt="${BRAND.name} logo">`;
   }
   const name = document.getElementById("brand-name");
   if(name) name.textContent = BRAND.name;
@@ -96,7 +100,8 @@ function renderBrand(){
   if(name2) name2.textContent = BRAND.name;
   const tag = document.getElementById("brand-tagline");
   if(tag) tag.textContent = BRAND.tagline;
-  document.title = BRAND.name + " — Commission";
+  const pageTitle = document.body ? (document.body.dataset.pageTitle || "") : "";
+  document.title = pageTitle ? `${pageTitle} — ${BRAND.name}` : `${BRAND.name} — Commission`;
 }
 
 function renderSocials(){
@@ -183,6 +188,12 @@ function normalizeSiteData(raw){
     leaderboard_title: String(source.leaderboard_title || "Top Commish").slice(0, 80),
     leaderboard_period: String(source.leaderboard_period || "Bulan Ini").slice(0, 60),
     leaderboard: normalizeLeaderboard(source.leaderboard ?? source.entries),
+    schedule: CONTENT_API
+      ? CONTENT_API.normalizeSchedule(source.schedule)
+      : (Array.isArray(source.schedule) ? source.schedule : []),
+    about: CONTENT_API
+      ? CONTENT_API.normalizeAbout(source.about)
+      : (source.about && typeof source.about === "object" ? source.about : {}),
     updated_at: source.updated_at ?? source.updatedAt ?? null
   };
 }
@@ -514,11 +525,127 @@ function renderLeaderboard(){
   });
 }
 
+function renderAbout(state = siteData){
+  const about = CONTENT_API
+    ? CONTENT_API.normalizeAbout(state.about)
+    : (state.about && typeof state.about === "object" ? state.about : {});
+
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = value || "";
+  };
+
+  set("about-kicker", about.kicker);
+  set("about-name", about.name);
+  set("about-role", about.role);
+  set("about-tagline", about.tagline);
+  set("about-bio", about.bio);
+  set("about-location", about.location);
+  set("about-timezone", about.timezone);
+  set("about-birthday", about.birthday);
+  set("about-languages", about.languages);
+  set("about-commission-note", about.commission_note);
+
+  set("about-home-name", about.name);
+  set("about-home-role", about.role);
+  set("about-home-bio", about.bio);
+  set("about-home-location", about.location);
+  set("about-home-languages", about.languages);
+  set("about-home-software", (about.software || []).slice(0, 3).join(" / "));
+
+  const photo = safeImageUrl(about.photo_url) || `${SITE_BASE}assets/img/character.png`;
+  ["about-photo", "about-home-photo"].forEach(id => {
+    const img = document.getElementById(id);
+    if(!img) return;
+    img.src = photo;
+    img.alt = about.name ? about.name + " photo" : "About photo";
+  });
+
+  renderAboutList("about-software", about.software);
+  renderAboutList("about-equipment", about.equipment);
+  renderAboutList("about-hobbies", about.hobbies);
+  renderAboutList("about-fun-facts", about.fun_facts);
+  renderAboutList("about-favorites", about.favorites);
+}
+
+function renderAboutList(id, items){
+  const el = document.getElementById(id);
+  if(!el) return;
+  renderTextList(el, items || []);
+  const block = el.closest("[data-about-list]");
+  if(block) block.hidden = !(items && items.length);
+}
+
+function scheduleClientLabel(item){
+  const name = String(item.client_name || "").trim();
+  if(item.visibility === "anonymous") return "Anonymous";
+  if(!name) return "Client";
+  if(item.visibility === "initial") return name.charAt(0).toUpperCase() + ".";
+  return name;
+}
+
+function renderSchedule(state = siteData){
+  const board = document.getElementById("schedule-board");
+  if(!board) return;
+
+  const statuses = CONTENT_API
+    ? CONTENT_API.statuses
+    : [
+        { key: "waiting", label: "Waiting List" },
+        { key: "in_work", label: "In Work" },
+        { key: "done", label: "Done" }
+      ];
+  const items = CONTENT_API
+    ? CONTENT_API.normalizeSchedule(state.schedule)
+    : (Array.isArray(state.schedule) ? state.schedule : []);
+
+  statuses.forEach(({ key }) => {
+    const list = board.querySelector(`[data-schedule-list="${key}"]`);
+    const count = board.querySelector(`[data-schedule-count="${key}"]`);
+    const empty = board.querySelector(`[data-schedule-empty="${key}"]`);
+    const group = items.filter(item => item.status === key);
+
+    if(count) count.textContent = group.length;
+    if(empty) empty.hidden = group.length > 0;
+    if(!list) return;
+
+    list.innerHTML = group.map((item, index) => {
+      const note = item.note
+        ? `<p class="schedule-card-note">${escapeHtml(item.note)}</p>`
+        : "";
+      return `<article class="schedule-card" data-status="${escapeHtml(key)}">
+        <div class="schedule-card-top">
+          <span class="schedule-service">${escapeHtml(item.service || "Commission")}</span>
+          <span class="schedule-client">${escapeHtml(scheduleClientLabel(item))}</span>
+        </div>
+        <h3>${escapeHtml(item.title)}</h3>
+        ${note}
+        <span class="schedule-queue" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span>
+      </article>`;
+    }).join("");
+  });
+
+  const summary = document.getElementById("schedule-summary");
+  if(summary){
+    const waiting = items.filter(item => item.status === "waiting").length;
+    const inWork = items.filter(item => item.status === "in_work").length;
+    const done = items.filter(item => item.status === "done").length;
+    summary.textContent = items.length
+      ? `${items.length} commission - ${waiting} waiting, ${inWork} in work, ${done} done.`
+      : "Belum ada commission di jadwal.";
+  }
+
+  const updated = document.getElementById("schedule-updated");
+  if(updated) updated.textContent = formatSlotDate(state.updated_at);
+}
+
 function renderSite(){
   renderPricing();
   renderSlots();
   renderServices();
   renderLeaderboard();
+  renderSchedule();
+  renderAbout();
 }
 
 async function fetchJson(url, timeout = 4000){
@@ -552,6 +679,8 @@ async function loadFallback(){
     next.clip_open = normalizeOpen(slots.clipOpen ?? slots.clip_open ?? next.clip_open);
     next.shorts_open = normalizeOpen(slots.shortsOpen ?? slots.shorts_open ?? next.shorts_open);
     next.vod_open = normalizeOpen(slots.vodOpen ?? slots.vod_open ?? next.vod_open);
+    if(slots.schedule !== undefined) next.schedule = slots.schedule;
+    if(slots.about !== undefined) next.about = slots.about;
     next.updated_at = slots.updatedAt || next.updated_at;
     touched = true;
   }

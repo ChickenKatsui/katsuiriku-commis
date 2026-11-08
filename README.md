@@ -1,13 +1,16 @@
 # KatsuiRiku Ch — Commission (Static Site + Supabase)
 
-Website commission statis (HTML/CSS/JS) dengan nuansa blush rose, cream, cocoa, sage, dan moon gold. Responsive + mobile dock. Data slot, status layanan, harga Indonesia/Global, dan leaderboard **Top Commish** memakai Supabase supaya bisa diedit dari admin panel terpisah dan update realtime.
+Website commission statis (HTML/CSS/JS) dengan nuansa blush rose, cream, cocoa, sage, dan moon gold. Responsive + mobile dock. Data slot, status layanan, harga Indonesia/Global, jadwal commission, About Me, dan leaderboard **Top Commish** memakai Supabase supaya bisa diedit dari admin panel terpisah dan update realtime.
 
 ## Struktur
 
 - `index.html` — halaman utama
+- `schedule/index.html` — halaman jadwal commission (Waiting List / In Work / Done)
+- `about/index.html` — halaman About Me lengkap
 - `assets/css/style.css` — styling & responsive
 - `assets/js/main.js` — data brand/sosmed + pembacaan data live (EDIT DI SINI)
 - `assets/js/pricing-defaults.js` — harga default + normalizer harga Indonesia/Global
+- `assets/js/content-defaults.js` — default About Me + normalizer jadwal commission
 - `assets/js/supabase-config.js` — URL + anon key Supabase (isi setelah setup)
 - `admin/` — panel admin terpisah (`index.html`, `admin.css`, `admin.js`)
 - `data/slots.json` — fallback slot + status layanan kalau Supabase belum aktif
@@ -15,6 +18,7 @@ Website commission statis (HTML/CSS/JS) dengan nuansa blush rose, cream, cocoa, 
 - `SUPABASE_SETUP.md` — panduan SQL, Auth, RLS, realtime
 - `supabase/migrations/20261102_service_status.sql` — migrasi kolom status layanan
 - `supabase/migrations/20261105_pricing.sql` — migrasi kolom harga Indonesia/Global
+- `supabase/migrations/20261107_schedule_about.sql` — migrasi kolom jadwal & About Me
 - `assets/img/logo-character.png` — logo headcrop karakter (header, favicon)
 - `assets/img/character.png` — ilustrasi karakter full body (hero)
 - `assets/img/logo.svg` — logo paw cadangan (tidak dipakai)
@@ -31,6 +35,8 @@ Website commission statis (HTML/CSS/JS) dengan nuansa blush rose, cream, cocoa, 
 - Waktu pengerjaan: **1–3 hari** untuk Shorts, Clip, VOD, dan request editing lainnya; bisa lebih lama untuk durasi panjang atau demand editing baru
 - Status layanan: Katsui Clip, Shorts, dan VOD bisa diatur **Open / Closed** dari admin
 - Harga Indonesia (IDR) dan Global (USD) dipisah di admin: harga, satuan, daftar termasuk, catatan, label tombol, dan tabel durasi bisa diedit tanpa mengubah HTML
+- Jadwal commission: board publik **Waiting List / In Work / Done** di `/schedule/`, nama client bisa ditampilkan, inisial, atau anonymous per item
+- About Me: halaman `/about/` + ringkasan di homepage, berisi bio, lokasi, timezone, birthday, bahasa, software, equipment, hobi, fun facts, favorites, dan catatan commission
 - Top Commish: leaderboard manual **top 5 client** berdasarkan jumlah commission per bulan
 - Portfolio Shorts: playlist `https://youtube.com/playlist?list=PLNJ5KH9O1soM&si=lMcD65zGpCHeEC8i`
 - Portfolio VOD & Kategori Shorts: dihapus
@@ -47,9 +53,9 @@ Buka `assets/js/main.js`:
 - `CONTACT` → link Twitter/X, Instagram, Discord, Facebook
 - `PORTFOLIO_PLAYLIST` → link playlist portfolio
 
-Harga default dan struktur detail panel ada di `assets/js/pricing-defaults.js`. Setelah admin menyimpan harga, nilai dari Supabase yang dipakai. Link/tombol langsung ada di `index.html`.
+Harga default dan struktur detail panel ada di `assets/js/pricing-defaults.js`. Default About Me dan struktur jadwal ada di `assets/js/content-defaults.js`. Setelah admin menyimpan, nilai dari Supabase yang dipakai. Link/tombol langsung ada di `index.html`, `schedule/index.html`, dan `about/index.html`.
 
-Setelah mengubah `assets/css/style.css`, `assets/js/main.js`, `assets/js/pricing-defaults.js`, `admin/admin.css`, atau `admin/admin.js`, ganti angka `?v=...` di `index.html` dan `admin/index.html` agar browser/CDN tidak memakai cache lama. Versi saat ini: **20261105b**. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
+Setelah mengubah `assets/css/style.css`, `assets/js/main.js`, `assets/js/pricing-defaults.js`, `assets/js/content-defaults.js`, `admin/admin.css`, atau `admin/admin.js`, ganti angka `?v=...` di `index.html`, `schedule/index.html`, `about/index.html`, dan `admin/index.html` agar browser/CDN tidak memakai cache lama. Versi saat ini: **20261107d**. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
 
 ## Admin panel & data live
 
@@ -64,7 +70,7 @@ Halaman ini tidak dilink dari website publik dan memakai `noindex` + `robots.txt
 Ikuti langkah lengkap di **`SUPABASE_SETUP.md`**. Ringkasnya:
 
 1. Buat project Supabase.
-2. Jalankan SQL setup (tabel `site_data`, `admin_users`, RLS, realtime). Untuk database yang sudah ada, jalankan juga migrasi status layanan dan migrasi harga.
+2. Jalankan SQL setup (tabel `site_data`, `admin_users`, RLS, realtime). Untuk database yang sudah ada, jalankan juga migrasi status layanan, harga, serta jadwal & About Me.
 3. Buat user admin di **Authentication → Users** (auto-confirm), lalu masukkan UUID-nya ke `admin_users`.
 4. Salin **Project URL** + **anon public key** ke `assets/js/supabase-config.js`.
 5. Buka `/admin/`, login.
@@ -87,6 +93,16 @@ Tab **Layanan** → toggle **Katsui Clip**, **Shorts / Reels / TikTok**, dan **V
 
 Untuk database yang sudah ada, jalankan SQL migrasi di **`SUPABASE_SETUP.md`** agar kolom `clip_open`, `shorts_open`, dan `vod_open` ditambahkan.
 
+### Edit jadwal commission
+
+Tab **Jadwal** → **+ Tambah item** → isi judul, client, layanan, status (Waiting List / In Work / Done), pilihan tampil nama, dan catatan → atur urutan dengan tombol panah → **Simpan jadwal**. Board publik ada di `/schedule/`.
+
+Untuk database yang sudah ada, jalankan migrasi `supabase/migrations/20261107_schedule_about.sql`.
+
+### Edit About Me
+
+Tab **About Me** → isi profil, bio, lokasi, timezone, birthday, bahasa, daftar software/equipment/hobi/favorites/fun facts (satu per baris), catatan commission, dan foto URL opsional → **Simpan About Me**. Halaman lengkap ada di `/about/`, ringkasannya tampil di homepage.
+
 ### Edit Top Commish
 
 Tab **Top Commish** → isi judul + periode → isi maksimal 5 baris (nama, jumlah commish, handle opsional, avatar URL opsional) → simpan. Urutan baris = rank. Ganti periode dan isi ulang setiap bulan.
@@ -107,6 +123,7 @@ Selama `supabase-config.js` kosong, website publik memakai:
 - `data/slots.json` untuk slot + status layanan
 - `data/top-commish.json` untuk leaderboard (default kosong)
 - `assets/js/pricing-defaults.js` untuk harga default Indonesia/Global
+- `assets/js/content-defaults.js` untuk default About Me + jadwal kosong
 
 Jadi situs tetap jalan tanpa Supabase. Setelah config diisi, Supabase menjadi sumber utama.
 
@@ -123,12 +140,14 @@ Tidak perlu build tool. `.nojekyll` sudah disertakan.
 
 - Sudah dicek dari **240px sampai 2560px** tanpa horizontal scroll.
 - Breakpoint utama:
-  - `≤ 980px` — hero jadi satu kolom
-  - `≤ 900px` — navigasi berubah jadi hamburger
-  - `≤ 820px` — slot board jadi satu kolom
-  - `≤ 720px` — highlight & playlist menyesuaikan
-  - `≤ 560px` — kartu satu kolom + mobile dock + header logo saja
+  - `≤ 980px` — hero dan About hero jadi satu kolom
+  - `≤ 900px` — navigasi berubah jadi hamburger + mobile dock
+  - `≤ 820px` — slot board, jadwal board, dan About lists menyesuaikan
+  - `≤ 720px` — highlight, playlist, dan About facts menyesuaikan
+  - `≤ 560px` — kartu satu kolom + header logo saja
+  - `≤ 420px` — mobile dock dipadatkan untuk 6 item
   - `≤ 380px` — penyesuaian layar sangat kecil
+  - `≤ 300px` — label mobile dock disembunyikan, ikon tetap tampil
   - HP landscape (`≤ 950px` & tinggi `≤ 500px`) — header logo saja
 - Mobile dock & footer memakai safe-area inset (iPhone notch/home indicator).
 - Logo HP diperbesar (56px); tablet/laptop tetap 42px.
