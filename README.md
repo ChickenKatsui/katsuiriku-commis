@@ -55,7 +55,7 @@ Buka `assets/js/main.js`:
 
 Harga default dan struktur detail panel ada di `assets/js/pricing-defaults.js`. Default About Me dan struktur jadwal ada di `assets/js/content-defaults.js`. Setelah admin menyimpan, nilai dari Supabase yang dipakai. Link/tombol langsung ada di `index.html`, `schedule/index.html`, dan `about/index.html`.
 
-Setelah mengubah `assets/css/style.css`, `assets/js/main.js`, `assets/js/pricing-defaults.js`, `assets/js/content-defaults.js`, `admin/admin.css`, atau `admin/admin.js`, ganti angka `?v=...` di `index.html`, `schedule/index.html`, `about/index.html`, dan `admin/index.html` agar browser/CDN tidak memakai cache lama. Versi saat ini: **20261108b**. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
+Setelah mengubah `assets/css/style.css`, `assets/js/main.js`, `assets/js/pricing-defaults.js`, `assets/js/content-defaults.js`, `admin/admin.css`, atau `admin/admin.js`, ganti angka `?v=...` di `index.html`, `schedule/index.html`, `about/index.html`, dan `admin/index.html` agar browser/CDN tidak memakai cache lama. Versi saat ini: **20261109b**. Untuk gambar, timpa file lalu tambahkan `?v=` baru di `BRAND.logoImage`, favicon, atau `src` gambar terkait.
 
 ## Admin panel & data live
 
